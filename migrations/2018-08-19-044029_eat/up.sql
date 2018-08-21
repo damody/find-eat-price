@@ -1,5 +1,3 @@
-
-
 -- 會員資訊
 -- name 名字
 -- password 密碼的hash
@@ -10,8 +8,9 @@ CREATE TABLE member
     member_id INT NOT NULL AUTO_INCREMENT UNIQUE,
     email VARCHAR(128) NOT NULL UNIQUE,
     name VARCHAR(128) NOT NULL,
-    enable BIT DEFAULT 1 NOT NULL,
-    phone_number VARCHAR(32) NOT NULL,
+    enable TINYINT DEFAULT 1 NOT NULL,
+    gender TINYINT DEFAULT 0 NOT NULL,
+    phone_number VARCHAR(32) DEFAULT "" NOT NULL,
     password VARCHAR(64) NOT NULL,
     member_level TINYINT NOT NULL,
     join_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -46,8 +45,6 @@ CREATE TABLE blacklist
     comment VARCHAR(500) NOT NULL,
     PRIMARY Key(member_id, restaurant_id)
 );
-
-
 
 -- 店家資訊
 -- good 是喜歡數量
@@ -133,4 +130,3 @@ CREATE TABLE menu_tag
     tag INT NOT NULL,
     PRIMARY Key(menu_id, tag)
 );
-

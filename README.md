@@ -13,6 +13,16 @@ echo "DATABASE_URL=file:test.db" > .env
 diesel migration run
 ```
 
+### mysql
+
+```sql
+DROP DATABASE eat;
+CREATE DATABASE eat;
+CREATE USER 'eat'@'localhost' IDENTIFIED BY 'eateat';
+GRANT ALL PRIVILEGES ON eat.* TO 'eat'@'localhost';
+
+```
+
 ### server
 
 ```bash
