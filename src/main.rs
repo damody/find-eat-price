@@ -18,14 +18,12 @@ extern crate r2d2;
 extern crate uuid;
 extern crate bytes;
 extern crate dotenv;
-
 extern crate chrono;
-use chrono::{DateTime, Duration, NaiveDate, NaiveDateTime, NaiveTime, Utc};
 
 use actix::prelude::*;
 use actix_web::{
     error, http, middleware, server, App, AsyncResponder, Error, HttpMessage,
-HttpRequest, HttpResponse, Json,
+HttpRequest, HttpResponse,
 };
 
 use bytes::BytesMut;
@@ -51,7 +49,7 @@ pub struct AppState {
 pub struct MembersParams {
     pub email: String,
     pub name: String,
-    pub phone_number: String,
+    pub phone_number: Option<String>,
     pub password: String,
     pub pic_url: Vec<String>,
 }
@@ -59,6 +57,13 @@ const MAX_SIZE: usize = 262_144; // max payload size is 256k
 /// Async request handler
 pub fn members_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
     // HttpRequest::payload() is stream of Bytes objects
+    req.state().db.send(CreateMember {
+        name: "".to_string(),
+        email: "".to_string(),
+        password: "".to_string(),
+        member_level:0,
+        phone_number:None,
+    });
     req.payload()
         // `Future::from_err` acts like `?` in that it coerces the error type from
         // the future into the final error type
@@ -80,6 +85,7 @@ pub fn members_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespon
         .and_then(|body| {
             // body is loaded, now we can deserialize serde-json
             let obj = serde_json::from_slice::<MembersParams>(&body)?;
+            
             Ok(HttpResponse::Ok().json(obj)) // <- send response
         })
     .responder()
