@@ -47,7 +47,12 @@ pub struct MembersParams {
     pub name: String,
     pub phone_number: Option<String>,
     pub password: String,
+    pub gender: i8,
     pub pic_url: Vec<String>,
+}
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ErrorMessage {
+    pub error: String,
 }
 const MAX_SIZE: usize = 262_144; // max payload size is 256k
 /// Async request handler
@@ -73,9 +78,32 @@ pub fn members_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespon
         // `Future::and_then` can be used to merge an asynchronous workflow with a
         // synchronous workflow
         .and_then(move |body| {
+            use self::schema::member::dsl::*;
+            use diesel::result::Error;
+            
             // body is loaded, now we can deserialize serde-json
-            let obj:MembersParams = serde_json::from_slice::<MembersParams>(&body)?;
-            let o = obj.clone();
+            let o:MembersParams = serde_json::from_slice::<MembersParams>(&body)?;
+            let conn: MysqlConnection = MysqlConnection::establish("mysql://eat:eateat@localhost/eat").unwrap();
+            
+            let mut new_user = models::NewMember {
+                email: o.email,
+                name: o.name,
+                password: o.password,
+                gender: o.gender,
+                phone_number: "".to_string(),
+            };
+            if let Some(x) = o.phone_number {
+                new_user.phone_number = x.clone();
+            };
+            let data = conn.transaction::<models::Member, Error, _>(|| {
+                diesel::insert_into(member).values(&new_user).execute(&conn)?;
+                member.order(member_id.desc()).first(&conn)
+            });
+            match data {
+                Ok(x) => Ok(HttpResponse::Ok().json(x)),
+                Err(x) => Ok(HttpResponse::Ok().json(ErrorMessage {error : "insert fail.".to_string()}))
+            }
+            /* r2d2 fail so comment
             db.do_send(CreateMember {
                 name: o.name,
                 email: o.email,
@@ -83,7 +111,8 @@ pub fn members_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespon
                 member_level:0,
                 phone_number:o.phone_number,
             });
-            Ok(HttpResponse::Ok().json(obj))
+            */
+            
         })
     .responder()
 }
@@ -99,23 +128,9 @@ fn main() -> Result<(), Box<Error>> {
         .expect("DATABASE_URL must be set in order to run unit tests");
     // Start 3 db executor actors
     let manager = ConnectionManager::<MysqlConnection>::new(url);
-    let pool = r2d2::Pool::builder()
-        .build(manager)
+    let pool = r2d2::Pool::new(manager)
         .expect("Failed to create pool.");
-    let p2 = pool.clone();
-    let conn = &pool.get().unwrap();
-    {
-        let new_user = models::NewMember {
-            email: "".to_string(),
-            name: "".to_string(),
-            password: "".to_string(),
-            member_level: 0,
-            phone_number: "".to_string(),
-        };
-        use self::schema::member::dsl::*;
-        diesel::insert_into(member).values(&new_user).execute(conn).unwrap();
-    }
-    let addr = SyncArbiter::start(3, move || DbExecutor(p2.clone()));
+    let addr = SyncArbiter::start(3, move || DbExecutor(pool.clone()));
     // Start http server
     server::new(move || {
         App::with_state(AppState{db: addr.clone()})

@@ -12,7 +12,7 @@ CREATE TABLE member
     gender TINYINT DEFAULT 0 NOT NULL,
     phone_number VARCHAR(32) DEFAULT "" NOT NULL,
     password VARCHAR(64) NOT NULL,
-    member_level TINYINT NOT NULL,
+    member_level TINYINT DEFAULT 0 NOT NULL,
     join_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     PRIMARY Key(member_id)
 );

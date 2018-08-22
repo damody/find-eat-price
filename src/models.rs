@@ -23,5 +23,5 @@ pub struct NewMember {
     pub name: String,
     pub phone_number: String,
     pub password: String,
-    pub member_level: i8,
+    pub gender: i8,
 }
