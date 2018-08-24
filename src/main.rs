@@ -19,102 +19,31 @@ extern crate uuid;
 extern crate bytes;
 extern crate dotenv;
 extern crate chrono;
+extern crate r2d2_diesel;
 
 use actix::prelude::*;
 use actix_web::{
     error, http, middleware, server, App, AsyncResponder, Error, HttpMessage,
-HttpRequest, HttpResponse,
+    HttpRequest, HttpResponse,pred
 };
 use bytes::BytesMut;
 use futures::{Future, Stream};
 use diesel::prelude::*;
-use diesel::r2d2::ConnectionManager;
+//use diesel::r2d2::ConnectionManager;
+use r2d2_diesel::ConnectionManager;
+use r2d2::Pool;
 
 mod db;
 mod models;
 mod schema;
+mod members;
 
-use db::{CreateMember, DbExecutor};
+use members::*;
+use db::{DbExecutor, AppState};
 
-/// State with DbExecutor address
-pub struct AppState {
-    db: Addr<DbExecutor>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MembersParams {
-    pub email: String,
-    pub name: String,
-    pub phone_number: Option<String>,
-    pub password: String,
-    pub gender: i8,
-    pub pic_url: Vec<String>,
-}
-#[derive(Debug, Serialize, Deserialize)]
-pub struct ErrorMessage {
-    pub error: String,
-}
-const MAX_SIZE: usize = 262_144; // max payload size is 256k
-/// Async request handler
-pub fn members_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
-    // HttpRequest::payload() is stream of Bytes objects
-    let db = req.state().db.clone();
-    req.payload()
-        // `Future::from_err` acts like `?` in that it coerces the error type from
-        // the future into the final error type
-        .from_err()
-
-        // `fold` will asynchronously read each chunk of the request body and
-        // call supplied closure, then it resolves to result of closure
-        .fold(BytesMut::new(), move |mut body, chunk| {
-            // limit max size of in-memory payload
-            if (body.len() + chunk.len()) > MAX_SIZE {
-                Err(error::ErrorBadRequest("overflow"))
-            } else {
-                body.extend_from_slice(&chunk);
-                Ok(body)
-            }
-        })
-        // `Future::and_then` can be used to merge an asynchronous workflow with a
-        // synchronous workflow
-        .and_then(move |body| {
-            use self::schema::member::dsl::*;
-            use diesel::result::Error;
-            
-            // body is loaded, now we can deserialize serde-json
-            let o:MembersParams = serde_json::from_slice::<MembersParams>(&body)?;
-            let conn: MysqlConnection = MysqlConnection::establish("mysql://eat:eateat@localhost/eat").unwrap();
-            
-            let mut new_user = models::NewMember {
-                email: o.email,
-                name: o.name,
-                password: o.password,
-                gender: o.gender,
-                phone_number: "".to_string(),
-            };
-            if let Some(x) = o.phone_number {
-                new_user.phone_number = x.clone();
-            };
-            let data = conn.transaction::<models::Member, Error, _>(|| {
-                diesel::insert_into(member).values(&new_user).execute(&conn)?;
-                member.order(member_id.desc()).first(&conn)
-            });
-            match data {
-                Ok(x) => Ok(HttpResponse::Ok().json(x)),
-                Err(x) => Ok(HttpResponse::Ok().json(ErrorMessage {error : "insert fail.".to_string()}))
-            }
-            /* r2d2 fail so comment
-            db.do_send(CreateMember {
-                name: o.name,
-                email: o.email,
-                password: o.password,
-                member_level:0,
-                phone_number:o.phone_number,
-            });
-            */
-            
-        })
-    .responder()
+/// 404 handler
+fn p404(req: &HttpRequest<AppState>) -> actix_web::Result<actix_web::fs::NamedFile> {
+    Ok(actix_web::fs::NamedFile::open("static/404.html")?.set_status_code(http::StatusCode::NOT_FOUND))
 }
 
 fn main() -> Result<(), Box<Error>> {
@@ -136,7 +65,17 @@ fn main() -> Result<(), Box<Error>> {
         App::with_state(AppState{db: addr.clone()})
             // enable logger
             .middleware(middleware::Logger::default())
-            .resource("/members", |r| r.method(http::Method::POST).f(members_post))
+            .resource("/members", |r| {
+                r.post().f(members_post);
+                r.put().f(members_put);
+            })
+            .default_resource(|r| {
+                // 404 for GET request
+                r.method(http::Method::GET).f(p404);
+                // all requests that are not `GET`
+                r.route().filter(pred::Not(pred::Get())).f(
+                    |req| HttpResponse::MethodNotAllowed());
+            })
     }).bind("127.0.0.1:8080")
         .unwrap()
         .start();

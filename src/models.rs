@@ -25,3 +25,9 @@ pub struct NewMember {
     pub password: String,
     pub gender: i8,
 }
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct ErrorMessage {
+    pub error: String,
+}
+
