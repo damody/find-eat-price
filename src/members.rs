@@ -11,6 +11,7 @@ use models;
 use schema;
 use diesel;
 use diesel::prelude::*;
+use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MembersParams {
@@ -109,7 +110,7 @@ pub fn members_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespon
             });*/
             match data {
                 Ok(x) => Ok(HttpResponse::Ok().json(x)),
-                Err(x) => Ok(HttpResponse::Ok().json(models::ErrorMessage {error : "insert fail.".to_string()}))
+                Err(x) => Ok(HttpResponse::Ok().json(models::ErrorMessage {error : "insert fail, maybe email has used.".to_string()}))
             }
         })
     .responder()
@@ -145,12 +146,48 @@ pub fn members_put(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespons
             };
             let data = conn.transaction::<models::Member, Error, _>(|| {
                 diesel::update(member.find(mid)).set(&new_user).execute(&conn)?;
-                member.order(member_id.desc()).first(&conn)
+                member.find(mid).first(&conn)
             });
-            let o:MembersParams = serde_json::from_slice::<MembersParams>(&body)?;
             match data {
                 Ok(x) => Ok(HttpResponse::Ok().json(x)),
-                Err(x) => Ok(HttpResponse::Ok().json(models::ErrorMessage {error : "insert fail.".to_string()}))
+                Err(x) => Ok(HttpResponse::Ok().json(models::ErrorMessage {error : "update fail.".to_string()}))
+            }
+        })
+    .responder()
+}
+
+pub fn members_delete(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
+    let db = req.state().db.clone();
+    req.payload()
+        .from_err()
+        .fold(BytesMut::new(), move |mut body, chunk| {
+            if (body.len() + chunk.len()) > MAX_SIZE {
+                Err(error::ErrorBadRequest("overflow"))
+            } else {
+                body.extend_from_slice(&chunk);
+                Ok(body)
+            }
+        })
+        .and_then(move |body| {
+            use self::schema::member::dsl::*;
+            use diesel::result::Error;
+            let o:MembersPutParams = serde_json::from_slice::<MembersPutParams>(&body)?;
+            let conn: MysqlConnection = MysqlConnection::establish("mysql://eat:eateat@localhost/eat").unwrap();
+            println!("{:?}", o);
+            let mid = o.member_id.clone();
+            let res = diesel::delete(member.find(mid)).execute(&conn);
+            match res {
+                Ok(x) => {
+                    if x == 1 {
+                        let mut hash = HashMap::new();
+                        hash.insert("msg", "ok");
+                        Ok(HttpResponse::Ok().json(hash))
+                    } else {
+                        Ok(HttpResponse::Ok().json(models::ErrorMessage {error : "item not found.".to_string()}))
+                    }
+                    
+                    },
+                Err(x) => Ok(HttpResponse::Ok().json(models::ErrorMessage {error : "delete fail.".to_string()}))
             }
         })
     .responder()

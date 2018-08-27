@@ -68,6 +68,7 @@ fn main() -> Result<(), Box<Error>> {
             .resource("/members", |r| {
                 r.post().f(members_post);
                 r.put().f(members_put);
+                r.delete().f(members_delete);
             })
             .default_resource(|r| {
                 // 404 for GET request
