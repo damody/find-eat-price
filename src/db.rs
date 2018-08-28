@@ -1,12 +1,9 @@
 //! Db executor actor
 use actix::prelude::*;
 use actix_web::*;
-use diesel;
 use diesel::prelude::*;
 use r2d2_diesel::ConnectionManager;
 use r2d2::Pool;
-use models;
-use schema;
 
 pub type DBPool = Pool<ConnectionManager<MysqlConnection>>;
 

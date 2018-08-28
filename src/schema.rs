@@ -39,7 +39,7 @@ table! {
         name -> Varchar,
         enable -> Tinyint,
         gender -> Tinyint,
-        phone_number -> Varchar,
+        phone -> Varchar,
         password -> Varchar,
         member_level -> Tinyint,
         join_date -> Datetime,
@@ -73,15 +73,19 @@ table! {
 }
 
 table! {
-    restaurant_info (restaurant_id) {
+    restaurant (restaurant_id) {
         restaurant_id -> Integer,
-        chain_store_id -> Integer,
+        author_id -> Integer,
+        chain_id -> Integer,
         name -> Varchar,
+        email -> Varchar,
+        phone -> Varchar,
+        enable -> Tinyint,
         good -> Integer,
         bad -> Integer,
         menu_id -> Integer,
-        start_time -> Varchar,
-        end_time -> Varchar,
+        open_time -> Varchar,
+        close_time -> Varchar,
         input_date -> Datetime,
     }
 }
@@ -119,7 +123,7 @@ allow_tables_to_appear_in_same_query!(
     member_vip_record,
     menu,
     menu_tag,
-    restaurant_info,
+    restaurant,
     restaurant_pos,
     restaurant_tag,
     tag_name,

@@ -10,7 +10,7 @@ CREATE TABLE member
     name VARCHAR(128) NOT NULL,
     enable TINYINT DEFAULT 1 NOT NULL,
     gender TINYINT DEFAULT 0 NOT NULL,
-    phone_number VARCHAR(32) DEFAULT "" NOT NULL,
+    phone VARCHAR(32) DEFAULT "" NOT NULL,
     password VARCHAR(64) NOT NULL,
     member_level TINYINT DEFAULT 0 NOT NULL,
     join_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -49,20 +49,24 @@ CREATE TABLE blacklist
 -- 店家資訊
 -- good 是喜歡數量
 -- bad  是不喜歡數量
--- start_time 開店時間
--- end_time 關店時間
+-- open_time 開店時間
+-- close_time 關店時間
 -- chain_store_id 連鎖店id
 
-CREATE TABLE restaurant_info
+CREATE TABLE restaurant
 (
     restaurant_id INT NOT NULL AUTO_INCREMENT UNIQUE,
-    chain_store_id INT DEFAULT -1 NOT NULL,
+    author_id INT NOT NULL,
+    chain_id INT DEFAULT -1 NOT NULL,
     name VARCHAR(128) NOT NULL,
+    email VARCHAR(128) DEFAULT "" NOT NULL,
+    phone VARCHAR(32) DEFAULT "" NOT NULL,
+    enable TINYINT DEFAULT 1 NOT NULL,
     good INT DEFAULT 0 NOT NULL,
     bad INT DEFAULT 0 NOT NULL,
-    menu_id INT NOT NULL,
-    start_time VARCHAR(128) DEFAULT '' NOT NULL,
-    end_time VARCHAR(128) DEFAULT '' NOT NULL,
+    menu_id INT DEFAULT -1 NOT NULL,
+    open_time VARCHAR(128) DEFAULT '' NOT NULL,
+    close_time VARCHAR(128) DEFAULT '' NOT NULL,
     input_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     PRIMARY Key(restaurant_id)
 );

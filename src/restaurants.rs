@@ -5,7 +5,7 @@ use actix_web::{
 
 use bytes::BytesMut;
 use serde_json;
-use db::{CreateMember, AppState};
+use db::{AppState};
 use futures::{Future, Stream};
 use models;
 use schema;
@@ -14,60 +14,53 @@ use diesel::prelude::*;
 use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MembersParams {
-    pub email: String,
+pub struct RestaurantsParams {
+    pub author_id: i32,
+    pub menu_id: Option<i32>,
     pub name: String,
     pub phone: Option<String>,
-    pub password: String,
-    pub gender: i8,
+    pub email: Option<String>,
+    pub chain_id: Option<i32>,
+    pub open_time: Option<String>,
+    pub close_time: Option<String>,
+    pub lat: f32,
+    pub lng: f32,
     pub pic_url: Vec<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MembersPutParams {
-    pub member_id: i32,
+pub struct RestaurantsPutParams {
+    pub restaurant_id: i32,
     pub name: Option<String>,
     pub enable: Option<i8>,
-    pub gender: Option<i8>,
+    pub email: Option<String>,
     pub phone: Option<String>,
-    pub password: Option<String>,
-    pub member_level: Option<i8>,
+    pub open_time: Option<String>,
+    pub close_time: Option<String>,
     pub pic_url: Option<Vec<String>>,
 }
 
-use super::schema::member;
+use super::schema::restaurant;
 #[derive(Deserialize, AsChangeset)]
-#[table_name = "member"]
-pub struct MembersPut1 {
-    pub member_id: i32,
+#[table_name = "restaurant"]
+pub struct RestaurantsPut1 {
+    pub restaurant_id: i32,
     pub name: Option<String>,
     pub enable: Option<i8>,
-    pub gender: Option<i8>,
+    pub email: Option<String>,
     pub phone: Option<String>,
-    pub password: Option<String>,
-    pub member_level: Option<i8>,
+    pub open_time: Option<String>,
+    pub close_time: Option<String>,
 }
 
 
 const MAX_SIZE: usize = 262_144; // max payload size is 256k
-/// Async request handler
-pub fn members_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
-    // HttpRequest::payload() is stream of Bytes objects
+
+pub fn restaurants_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
     let db = req.state().db.clone();
-    match *req.method() {
-        http::Method::GET => println!("get"),
-        http::Method::POST => println!("post"),
-        http::Method::PUT => println!("put"),
-        _ => println!("other"),
-    };
     req.payload()
-        // `Future::from_err` acts like `?` in that it coerces the error type from
-        // the future into the final error type
         .from_err()
-        // `fold` will asynchronously read each chunk of the request body and
-        // call supplied closure, then it resolves to result of closure
         .fold(BytesMut::new(), move |mut body, chunk| {
-            // limit max size of in-memory payload
             if (body.len() + chunk.len()) > MAX_SIZE {
                 Err(error::ErrorBadRequest("overflow"))
             } else {
@@ -75,39 +68,27 @@ pub fn members_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespon
                 Ok(body)
             }
         })
-        // `Future::and_then` can be used to merge an asynchronous workflow with a
-        // synchronous workflow
         .and_then(move |body| {
-            use self::schema::member::dsl::*;
+            use self::schema::restaurant::dsl::*;
             use diesel::result::Error;
-            
-            // body is loaded, now we can deserialize serde-json
-            let o:MembersParams = serde_json::from_slice::<MembersParams>(&body)?;
+            let o:RestaurantsParams = serde_json::from_slice::<RestaurantsParams>(&body)?;
             let conn: MysqlConnection = MysqlConnection::establish("mysql://eat:eateat@localhost/eat").unwrap();
             println!("{:?}", o);
-            let mut new_user = models::NewMember {
-                email: o.email,
+            let new_rest = models::NewRestaurant {
+                email: o.email.unwrap_or("".to_string()),
                 name: o.name,
-                password: o.password,
-                gender: o.gender,
-                phone: "".to_string(),
+                author_id: o.author_id,
+                menu_id: o.menu_id,
+                chain_id: o.chain_id.unwrap_or(-1),
+                phone: o.phone.unwrap_or("".to_string()),
+                open_time: o.open_time,
+                close_time: o.close_time,
             };
-            if let Some(x) = &o.phone {
-                new_user.phone = x.clone();
-            };
-            let data = conn.transaction::<models::Member, Error, _>(|| {
-                diesel::insert_into(member).values(&new_user).execute(&conn)?;
-                member.order(member_id.desc()).first(&conn)
+            let data = conn.transaction::<models::Restaurant, Error, _>(|| {
+                diesel::insert_into(restaurant).values(&new_rest).execute(&conn)?;
+                restaurant.order(restaurant_id.desc()).first(&conn)
             });
-            let o:MembersParams = serde_json::from_slice::<MembersParams>(&body)?;
-            /* r2d2 fail so comment
-            db.do_send(CreateMember {
-                name: o.name,
-                email: o.email,
-                password: o.password,
-                gender: o.gender,
-                phone: None,
-            });*/
+            let o:RestaurantsParams = serde_json::from_slice::<RestaurantsParams>(&body)?;
             match data {
                 Ok(x) => Ok(HttpResponse::Ok().json(x)),
                 Err(x) => Ok(HttpResponse::Ok().json(models::ErrorMessage {error : x.to_string()}))
@@ -116,7 +97,7 @@ pub fn members_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespon
     .responder()
 }
 
-pub fn members_put(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
+pub fn restaurants_put(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
     let db = req.state().db.clone();
     req.payload()
         .from_err()
@@ -129,34 +110,34 @@ pub fn members_put(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespons
             }
         })
         .and_then(move |body| {
-            use self::schema::member::dsl::*;
+            use self::schema::restaurant::dsl::*;
             use diesel::result::Error;
-            let o:MembersPutParams = serde_json::from_slice::<MembersPutParams>(&body)?;
+            let o:RestaurantsPutParams = serde_json::from_slice::<RestaurantsPutParams>(&body)?;
             let conn: MysqlConnection = MysqlConnection::establish("mysql://eat:eateat@localhost/eat").unwrap();
             println!("{:?}", o);
-            let mid = o.member_id.clone();
-            let new_user = MembersPut1 {
-                member_id: o.member_id,
+            let mid = o.restaurant_id.clone();
+            let new_user = RestaurantsPut1 {
+                restaurant_id: o.restaurant_id,
                 name: o.name,
                 enable: o.enable,
-                gender: o.gender,
                 phone: o.phone,
-                password: o.password,
-                member_level: o.member_level,
+                email: o.email,
+                open_time: o.open_time,
+                close_time: o.close_time,
             };
-            let data = conn.transaction::<models::Member, Error, _>(|| {
-                diesel::update(member.find(mid)).set(&new_user).execute(&conn)?;
-                member.find(mid).first(&conn)
+            let data = conn.transaction::<models::Restaurant, Error, _>(|| {
+                diesel::update(restaurant.find(mid)).set(&new_user).execute(&conn)?;
+                restaurant.find(mid).first(&conn)
             });
             match data {
                 Ok(x) => Ok(HttpResponse::Ok().json(x)),
-                Err(x) => Ok(HttpResponse::Ok().json(models::ErrorMessage {error : x.to_string()}))
+                Err(x) => Ok(HttpResponse::Ok().json(models::ErrorMessage {error : "update fail.".to_string()}))
             }
         })
     .responder()
 }
 
-pub fn members_delete(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
+pub fn restaurants_delete(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
     let db = req.state().db.clone();
     req.payload()
         .from_err()
@@ -169,13 +150,13 @@ pub fn members_delete(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResp
             }
         })
         .and_then(move |body| {
-            use self::schema::member::dsl::*;
+            use self::schema::restaurant::dsl::*;
             use diesel::result::Error;
-            let o:MembersPutParams = serde_json::from_slice::<MembersPutParams>(&body)?;
+            let o:RestaurantsPutParams = serde_json::from_slice::<RestaurantsPutParams>(&body)?;
             let conn: MysqlConnection = MysqlConnection::establish("mysql://eat:eateat@localhost/eat").unwrap();
             println!("{:?}", o);
-            let mid = o.member_id.clone();
-            let res = diesel::delete(member.find(mid)).execute(&conn);
+            let mid = o.restaurant_id.clone();
+            let res = diesel::delete(restaurant.find(mid)).execute(&conn);
             match res {
                 Ok(x) => {
                     if x == 1 {

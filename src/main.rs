@@ -37,8 +37,10 @@ mod db;
 mod models;
 mod schema;
 mod members;
+mod restaurants;
 
 use members::*;
+use restaurants::*;
 use db::{DbExecutor, AppState};
 
 /// 404 handler
@@ -69,6 +71,11 @@ fn main() -> Result<(), Box<Error>> {
                 r.post().f(members_post);
                 r.put().f(members_put);
                 r.delete().f(members_delete);
+            })
+            .resource("/restaurants", |r| {
+                r.post().f(restaurants_post);
+                r.put().f(restaurants_put);
+                r.delete().f(restaurants_delete);
             })
             .default_resource(|r| {
                 // 404 for GET request
