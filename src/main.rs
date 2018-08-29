@@ -82,6 +82,15 @@ fn main() -> Result<(), Box<Error>> {
             .resource("/wgs84_to_twd97", |r| {
                 r.post().f(geo_convert::wgs84_to_twd97);
             })
+            .resource("/wgs84_to_2degree_zone", |r| {
+                r.post().f(geo_convert::wgs84_to_2degree_zone);
+            })
+            .resource("/wgs84_to_3degree_zone", |r| {
+                r.post().f(geo_convert::wgs84_to_3degree_zone);
+            })
+            .resource("/wgs84_to_6degree_zone", |r| {
+                r.post().f(geo_convert::wgs84_to_6degree_zone);
+            })
             .default_resource(|r| {
                 // 404 for GET request
                 r.method(http::Method::GET).f(p404);

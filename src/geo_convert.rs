@@ -7,18 +7,14 @@ use bytes::BytesMut;
 use serde_json;
 use db::{AppState};
 use futures::{Future, Stream};
-use models;
-use schema;
 
 use std::f64::consts::PI;
-const a:f64 = 6378137.0;
-const b:f64 = 6356752.314245;
-const lon0:f64 = 121.0 * PI / 180.0;
-const k0:f64 = 0.9999;
-const dx:f64 = 250000.0;
 
-pub fn lonlat_To_twd97(lon:f64, lat:f64) ->(f64, f64) {
-    let lon = (lon/180.0) * PI;
+pub fn lnglat_To_2dzone(lng:f64, lat:f64, center_lng:f64, k0:f64, dx:f64) ->(f64, f64) {
+    let a:f64 = 6378137.0;
+    let b:f64 = 6356752.314245;
+    let lng0:f64 = center_lng * PI / 180.0;
+    let lng = (lng/180.0) * PI;
     let lat = (lat/180.0) * PI;
     
     //---------------------------------------------------------
@@ -26,7 +22,7 @@ pub fn lonlat_To_twd97(lon:f64, lat:f64) ->(f64, f64) {
     let e2:f64 = e.powf(2.0)/(1.0 - e.powf(2.0)); 
     let n:f64 = ( a - b ) / ( a + b );
     let nu:f64 = a / ((1.0 - e.powf(2.0) * lat.sin().powf(2.0))).powf(0.5);
-    let p:f64 = lon - lon0;
+    let p:f64 = lng - lng0;
     let A:f64 = a * (1.0 - n + (5.0/4.0) * (n.powf(2.0) - n.powf(3.0)) + (81.0/64.0) * (n.powf(4.0)  - n.powf(5.0)));
     let B:f64 = (3.0 * a * n/2.0) * (1.0 - n + (7.0/8.0)*(n.powf(2.0) - n.powf(3.0)) + (55.0/64.0)*(n.powf(4.0) - n.powf(5.0)));
     let C:f64 = (15.0 * a * (n.powf(2.0))/16.0)*(1.0 - n + (3.0/4.0)*(n.powf(2.0) - n.powf(3.0)));
@@ -53,13 +49,17 @@ pub fn lonlat_To_twd97(lon:f64, lat:f64) ->(f64, f64) {
 pub struct GeoParams {
     pub lng: f64,
     pub lat: f64,
+    pub center_lng: Option<f64>,
 }
-
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct GeoRes {
+    pub x: f64,
+    pub y: f64,
+}
 
 const MAX_SIZE: usize = 256;
 
 pub fn wgs84_to_twd97(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
-    let _db = req.state().db.clone();
     req.payload()
         .from_err()
         .fold(BytesMut::new(), move |mut body, chunk| {
@@ -76,8 +76,86 @@ pub fn wgs84_to_twd97(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResp
                 return Ok(HttpResponse::Ok().json(x.to_string()))
             };
             let o:GeoParams = o.unwrap();
-            let (lng, lat) = lonlat_To_twd97(o.lng, o.lat);
-            Ok(HttpResponse::Ok().json(GeoParams{lng:lng, lat:lat}))
+            let k0:f64 = 0.9999;
+            let dx:f64 = 250000.0;
+            let (x, y) = lnglat_To_2dzone(o.lng, o.lat, 121.0, k0, dx);
+            Ok(HttpResponse::Ok().json(GeoRes{x:x, y:y}))
+        })
+    .responder()
+}
+
+pub fn wgs84_to_2degree_zone(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
+    req.payload()
+        .from_err()
+        .fold(BytesMut::new(), move |mut body, chunk| {
+            if (body.len() + chunk.len()) > MAX_SIZE {
+                Err(error::ErrorBadRequest("overflow"))
+            } else {
+                body.extend_from_slice(&chunk);
+                Ok(body)
+            }
+        })
+        .and_then(move |body| {
+            let o = serde_json::from_slice::<GeoParams>(&body);
+            if let Err(x) = o {
+                return Ok(HttpResponse::Ok().json(x.to_string()))
+            };
+            let o:GeoParams = o.unwrap();
+            let k0:f64 = 0.9999;
+            let dx:f64 = 250000.0;
+            let (x, y) = lnglat_To_2dzone(o.lng, o.lat, o.center_lng.unwrap_or(121.0), k0, dx);
+            Ok(HttpResponse::Ok().json(GeoRes{x:x, y:y}))
+        })
+    .responder()
+}
+
+pub fn wgs84_to_3degree_zone(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
+    req.payload()
+        .from_err()
+        .fold(BytesMut::new(), move |mut body, chunk| {
+            if (body.len() + chunk.len()) > MAX_SIZE {
+                Err(error::ErrorBadRequest("overflow"))
+            } else {
+                body.extend_from_slice(&chunk);
+                Ok(body)
+            }
+        })
+        .and_then(move |body| {
+            let o = serde_json::from_slice::<GeoParams>(&body);
+            if let Err(x) = o {
+                return Ok(HttpResponse::Ok().json(x.to_string()))
+            };
+            let o:GeoParams = o.unwrap();
+            let k0:f64 = 1.0;
+            let dx:f64 = 350000.0;
+            let (x, y) = lnglat_To_2dzone(o.lng, o.lat, o.center_lng.unwrap_or(121.0), k0, dx);
+            Ok(HttpResponse::Ok().json(GeoRes{x:x, y:y}))
+        })
+    .responder()
+}
+
+
+pub fn wgs84_to_6degree_zone(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
+    req.payload()
+        .from_err()
+        .fold(BytesMut::new(), move |mut body, chunk| {
+            if (body.len() + chunk.len()) > MAX_SIZE {
+                Err(error::ErrorBadRequest("overflow"))
+            } else {
+                body.extend_from_slice(&chunk);
+                Ok(body)
+            }
+        })
+        .and_then(move |body| {
+            let o = serde_json::from_slice::<GeoParams>(&body);
+            if let Err(x) = o {
+                return Ok(HttpResponse::Ok().json(x.to_string()))
+            };
+            let o:GeoParams = o.unwrap();
+            let k0:f64 = 0.9996;
+            let dx:f64 = 500000.0;
+            let (x, y) = lnglat_To_2dzone(o.lng, o.lat, o.center_lng.unwrap_or(123.0), k0, dx);
+            Ok(HttpResponse::Ok().json(GeoRes{x:x, y:y}))
         })
     .responder()
 }
