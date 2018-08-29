@@ -40,7 +40,7 @@ impl Handler<CreateMember> for DbExecutor {
 //  type Result = Result<models::Member, Error>;
     type Result = Result<(), Error>;
 
-    fn handle(&mut self, msg: CreateMember, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, _msg: CreateMember, _: &mut Self::Context) -> Self::Result {
         /* r2d2 fail so comment*/
         /*use self::schema::member::dsl::*;
         println!("{:?}", msg);

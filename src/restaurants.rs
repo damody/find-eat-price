@@ -1,5 +1,5 @@
 use actix_web::{
-    error, http, AsyncResponder, Error, HttpMessage,
+    error, AsyncResponder, Error, HttpMessage,
     HttpRequest, HttpResponse
 };
 
@@ -57,7 +57,7 @@ pub struct RestaurantsPut1 {
 const MAX_SIZE: usize = 262_144; // max payload size is 256k
 
 pub fn restaurants_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
-    let db = req.state().db.clone();
+    let _db = req.state().db.clone();
     req.payload()
         .from_err()
         .fold(BytesMut::new(), move |mut body, chunk| {
@@ -71,7 +71,11 @@ pub fn restaurants_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRe
         .and_then(move |body| {
             use self::schema::restaurant::dsl::*;
             use diesel::result::Error;
-            let o:RestaurantsParams = serde_json::from_slice::<RestaurantsParams>(&body)?;
+            let o = serde_json::from_slice::<RestaurantsParams>(&body);
+            if let Err(x) = o {
+                return Ok(HttpResponse::Ok().json(x.to_string()))
+            };
+            let o:RestaurantsParams = o.unwrap();
             let conn: MysqlConnection = MysqlConnection::establish("mysql://eat:eateat@localhost/eat").unwrap();
             println!("{:?}", o);
             let new_rest = models::NewRestaurant {
@@ -88,7 +92,6 @@ pub fn restaurants_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRe
                 diesel::insert_into(restaurant).values(&new_rest).execute(&conn)?;
                 restaurant.order(restaurant_id.desc()).first(&conn)
             });
-            let o:RestaurantsParams = serde_json::from_slice::<RestaurantsParams>(&body)?;
             match data {
                 Ok(x) => Ok(HttpResponse::Ok().json(x)),
                 Err(x) => Ok(HttpResponse::Ok().json(models::ErrorMessage {error : x.to_string()}))
@@ -98,7 +101,7 @@ pub fn restaurants_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRe
 }
 
 pub fn restaurants_put(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
-    let db = req.state().db.clone();
+    let _db = req.state().db.clone();
     req.payload()
         .from_err()
         .fold(BytesMut::new(), move |mut body, chunk| {
@@ -112,7 +115,11 @@ pub fn restaurants_put(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRes
         .and_then(move |body| {
             use self::schema::restaurant::dsl::*;
             use diesel::result::Error;
-            let o:RestaurantsPutParams = serde_json::from_slice::<RestaurantsPutParams>(&body)?;
+            let o = serde_json::from_slice::<RestaurantsPutParams>(&body);
+            if let Err(x) = o {
+                return Ok(HttpResponse::Ok().json(x.to_string()))
+            };
+            let o:RestaurantsPutParams = o.unwrap();
             let conn: MysqlConnection = MysqlConnection::establish("mysql://eat:eateat@localhost/eat").unwrap();
             println!("{:?}", o);
             let mid = o.restaurant_id.clone();
@@ -131,14 +138,14 @@ pub fn restaurants_put(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRes
             });
             match data {
                 Ok(x) => Ok(HttpResponse::Ok().json(x)),
-                Err(x) => Ok(HttpResponse::Ok().json(models::ErrorMessage {error : "update fail.".to_string()}))
+                Err(x) => Ok(HttpResponse::Ok().json(models::ErrorMessage {error : x.to_string()}))
             }
         })
     .responder()
 }
 
 pub fn restaurants_delete(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
-    let db = req.state().db.clone();
+    let _db = req.state().db.clone();
     req.payload()
         .from_err()
         .fold(BytesMut::new(), move |mut body, chunk| {
@@ -151,7 +158,7 @@ pub fn restaurants_delete(req: &HttpRequest<AppState>) -> Box<Future<Item = Http
         })
         .and_then(move |body| {
             use self::schema::restaurant::dsl::*;
-            use diesel::result::Error;
+            //use diesel::result::Error;
             let o:RestaurantsPutParams = serde_json::from_slice::<RestaurantsPutParams>(&body)?;
             let conn: MysqlConnection = MysqlConnection::establish("mysql://eat:eateat@localhost/eat").unwrap();
             println!("{:?}", o);
@@ -168,7 +175,7 @@ pub fn restaurants_delete(req: &HttpRequest<AppState>) -> Box<Future<Item = Http
                     }
                     
                     },
-                Err(x) => Ok(HttpResponse::Ok().json(models::ErrorMessage {error : "delete fail.".to_string()}))
+                Err(x) => Ok(HttpResponse::Ok().json(models::ErrorMessage {error : x.to_string()}))
             }
         })
     .responder()

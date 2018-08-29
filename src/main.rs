@@ -23,15 +23,16 @@ extern crate r2d2_diesel;
 
 use actix::prelude::*;
 use actix_web::{
-    error, http, middleware, server, App, AsyncResponder, Error, HttpMessage,
+    http, middleware, server, App, Error,
     HttpRequest, HttpResponse,pred
 };
-use bytes::BytesMut;
-use futures::{Future, Stream};
+//use actix_web::{ error, AsyncResponder, HttpMessage, };
+//use bytes::BytesMut;
+//use futures::{Future, Stream};
 use diesel::prelude::*;
 //use diesel::r2d2::ConnectionManager;
 use r2d2_diesel::ConnectionManager;
-use r2d2::Pool;
+//use r2d2::Pool;
 
 mod db;
 mod models;
@@ -44,7 +45,7 @@ use restaurants::*;
 use db::{DbExecutor, AppState};
 
 /// 404 handler
-fn p404(req: &HttpRequest<AppState>) -> actix_web::Result<actix_web::fs::NamedFile> {
+fn p404(_req: &HttpRequest<AppState>) -> actix_web::Result<actix_web::fs::NamedFile> {
     Ok(actix_web::fs::NamedFile::open("static/404.html")?.set_status_code(http::StatusCode::NOT_FOUND))
 }
 
@@ -82,7 +83,7 @@ fn main() -> Result<(), Box<Error>> {
                 r.method(http::Method::GET).f(p404);
                 // all requests that are not `GET`
                 r.route().filter(pred::Not(pred::Get())).f(
-                    |req| HttpResponse::MethodNotAllowed());
+                    |_req| HttpResponse::MethodNotAllowed());
             })
     }).bind("127.0.0.1:8080")
         .unwrap()

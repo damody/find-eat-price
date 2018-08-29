@@ -5,7 +5,7 @@ use actix_web::{
 
 use bytes::BytesMut;
 use serde_json;
-use db::{CreateMember, AppState};
+use db::{AppState};
 use futures::{Future, Stream};
 use models;
 use schema;
@@ -53,7 +53,7 @@ const MAX_SIZE: usize = 262_144; // max payload size is 256k
 /// Async request handler
 pub fn members_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
     // HttpRequest::payload() is stream of Bytes objects
-    let db = req.state().db.clone();
+    let _db = req.state().db.clone();
     match *req.method() {
         http::Method::GET => println!("get"),
         http::Method::POST => println!("post"),
@@ -82,7 +82,11 @@ pub fn members_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespon
             use diesel::result::Error;
             
             // body is loaded, now we can deserialize serde-json
-            let o:MembersParams = serde_json::from_slice::<MembersParams>(&body)?;
+            let o = serde_json::from_slice::<MembersParams>(&body);
+            if let Err(x) = o {
+                return Ok(HttpResponse::Ok().json(x.to_string()))
+            };
+            let o:MembersParams = o.unwrap();
             let conn: MysqlConnection = MysqlConnection::establish("mysql://eat:eateat@localhost/eat").unwrap();
             println!("{:?}", o);
             let mut new_user = models::NewMember {
@@ -99,7 +103,7 @@ pub fn members_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespon
                 diesel::insert_into(member).values(&new_user).execute(&conn)?;
                 member.order(member_id.desc()).first(&conn)
             });
-            let o:MembersParams = serde_json::from_slice::<MembersParams>(&body)?;
+            let _o:MembersParams = serde_json::from_slice::<MembersParams>(&body)?;
             /* r2d2 fail so comment
             db.do_send(CreateMember {
                 name: o.name,
@@ -117,7 +121,7 @@ pub fn members_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespon
 }
 
 pub fn members_put(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
-    let db = req.state().db.clone();
+    let _db = req.state().db.clone();
     req.payload()
         .from_err()
         .fold(BytesMut::new(), move |mut body, chunk| {
@@ -131,7 +135,11 @@ pub fn members_put(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespons
         .and_then(move |body| {
             use self::schema::member::dsl::*;
             use diesel::result::Error;
-            let o:MembersPutParams = serde_json::from_slice::<MembersPutParams>(&body)?;
+            let o = serde_json::from_slice::<MembersPutParams>(&body);
+            if let Err(x) = o {
+                return Ok(HttpResponse::Ok().json(x.to_string()))
+            };
+            let o:MembersPutParams = o.unwrap();
             let conn: MysqlConnection = MysqlConnection::establish("mysql://eat:eateat@localhost/eat").unwrap();
             println!("{:?}", o);
             let mid = o.member_id.clone();
@@ -157,7 +165,7 @@ pub fn members_put(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespons
 }
 
 pub fn members_delete(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
-    let db = req.state().db.clone();
+    let _db = req.state().db.clone();
     req.payload()
         .from_err()
         .fold(BytesMut::new(), move |mut body, chunk| {
@@ -170,7 +178,7 @@ pub fn members_delete(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResp
         })
         .and_then(move |body| {
             use self::schema::member::dsl::*;
-            use diesel::result::Error;
+            //use diesel::result::Error;
             let o:MembersPutParams = serde_json::from_slice::<MembersPutParams>(&body)?;
             let conn: MysqlConnection = MysqlConnection::establish("mysql://eat:eateat@localhost/eat").unwrap();
             println!("{:?}", o);
@@ -187,7 +195,7 @@ pub fn members_delete(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResp
                     }
                     
                     },
-                Err(x) => Ok(HttpResponse::Ok().json(models::ErrorMessage {error : "delete fail.".to_string()}))
+                Err(x) => Ok(HttpResponse::Ok().json(models::ErrorMessage {error : x.to_string()}))
             }
         })
     .responder()
