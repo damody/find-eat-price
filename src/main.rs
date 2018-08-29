@@ -39,6 +39,7 @@ mod models;
 mod schema;
 mod members;
 mod restaurants;
+mod geo_convert;
 
 use members::*;
 use restaurants::*;
@@ -77,6 +78,9 @@ fn main() -> Result<(), Box<Error>> {
                 r.post().f(restaurants_post);
                 r.put().f(restaurants_put);
                 r.delete().f(restaurants_delete);
+            })
+            .resource("/wgs84_to_twd97", |r| {
+                r.post().f(geo_convert::wgs84_to_twd97);
             })
             .default_resource(|r| {
                 // 404 for GET request

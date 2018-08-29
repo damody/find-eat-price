@@ -3,6 +3,7 @@ extern crate chrono;
 use chrono::NaiveDateTime;
 use super::schema::member;
 use super::schema::restaurant;
+use super::schema::restaurant_pos;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ErrorMessage {
@@ -43,7 +44,7 @@ pub struct Restaurant {
     pub enable: i8,
     pub good: i32,
     pub bad: i32,
-    pub menu_id: i32,
+    pub food_id: i32,
     pub open_time: String,
     pub close_time: String,
     pub input_date: NaiveDateTime,
@@ -57,7 +58,17 @@ pub struct NewRestaurant {
     pub email: String,
     pub chain_id: i32,
     pub author_id: i32,
-    pub menu_id: Option<i32>,
+    pub food_id: Option<i32>,
     pub open_time: Option<String>,
     pub close_time: Option<String>,
+}
+
+#[derive(Deserialize, Insertable, Default)]
+#[table_name = "restaurant_pos"]
+pub struct NewRestaurantPos {
+    pub restaurant_id: i32,
+    pub lng: f32,
+    pub lat: f32,
+    pub twd97x: f32,
+    pub twd97y: f32,
 }

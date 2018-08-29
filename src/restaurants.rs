@@ -16,7 +16,7 @@ use std::collections::HashMap;
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RestaurantsParams {
     pub author_id: i32,
-    pub menu_id: Option<i32>,
+    pub food_id: Option<i32>,
     pub name: String,
     pub phone: Option<String>,
     pub email: Option<String>,
@@ -82,7 +82,7 @@ pub fn restaurants_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRe
                 email: o.email.unwrap_or("".to_string()),
                 name: o.name,
                 author_id: o.author_id,
-                menu_id: o.menu_id,
+                food_id: o.food_id,
                 chain_id: o.chain_id.unwrap_or(-1),
                 phone: o.phone.unwrap_or("".to_string()),
                 open_time: o.open_time,

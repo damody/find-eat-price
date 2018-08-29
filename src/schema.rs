@@ -83,7 +83,7 @@ table! {
         enable -> Tinyint,
         good -> Integer,
         bad -> Integer,
-        menu_id -> Integer,
+        food_id -> Integer,
         open_time -> Varchar,
         close_time -> Varchar,
         input_date -> Datetime,
