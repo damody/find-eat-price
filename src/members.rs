@@ -1,10 +1,11 @@
 use actix_web::{
     error, http, AsyncResponder, Error, HttpMessage,
-    HttpRequest, HttpResponse
+    HttpRequest, HttpResponse, FutureResponse, Json
 };
 
 use bytes::BytesMut;
 use serde_json;
+use db;
 use db::{AppState};
 use futures::{Future, Stream};
 use models;
@@ -12,6 +13,7 @@ use schema;
 use diesel;
 use diesel::prelude::*;
 use std::collections::HashMap;
+use futures::future::{join_all, ok as fut_ok};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MembersParams {
@@ -48,6 +50,24 @@ pub struct MembersPut1 {
     pub member_level: Option<i8>,
 }
 
+pub fn members_post2((item, req): (Json<MembersParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
+    // HttpRequest::payload() is stream of Bytes objects
+    let o = item.clone();
+    req.state().db
+        .send(db::CreateMember {
+            name: o.name,
+            email: o.email,
+            password: o.password,
+            gender: o.gender,
+            phone: None,
+        })
+        .from_err()
+        .and_then(|res| match res {
+            Ok(user) => Ok(HttpResponse::Ok().json(user)),
+            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        })
+        .responder()
+}
 
 const MAX_SIZE: usize = 262_144; // max payload size is 256k
 /// Async request handler
@@ -60,6 +80,7 @@ pub fn members_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespon
         http::Method::PUT => println!("put"),
         _ => println!("other"),
     };
+    
     req.payload()
         // `Future::from_err` acts like `?` in that it coerces the error type from
         // the future into the final error type
@@ -88,6 +109,7 @@ pub fn members_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespon
             };
             let o:MembersParams = o.unwrap();
             let conn: MysqlConnection = MysqlConnection::establish("mysql://eat:eateat@localhost/eat").unwrap();
+            
             println!("{:?}", o);
             let mut new_user = models::NewMember {
                 email: o.email,
@@ -99,19 +121,22 @@ pub fn members_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespon
             if let Some(x) = &o.phone {
                 new_user.phone = x.clone();
             };
+            
             let data = conn.transaction::<models::Member, Error, _>(|| {
                 diesel::insert_into(member).values(&new_user).execute(&conn)?;
                 member.order(member_id.desc()).first(&conn)
             });
-            let _o:MembersParams = serde_json::from_slice::<MembersParams>(&body)?;
-            /* r2d2 fail so comment
-            db.do_send(CreateMember {
+            let o:MembersParams = serde_json::from_slice::<MembersParams>(&body)?;
+            // r2d2 fail so comment
+            /*
+            _db.send(db::CreateMember {
                 name: o.name,
                 email: o.email,
                 password: o.password,
                 gender: o.gender,
                 phone: None,
-            });*/
+            });
+            */
             match data {
                 Ok(x) => Ok(HttpResponse::Ok().json(x)),
                 Err(x) => Ok(HttpResponse::Ok().json(models::ErrorMessage {error : x.to_string()}))

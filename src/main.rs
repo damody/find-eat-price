@@ -20,6 +20,7 @@ extern crate bytes;
 extern crate dotenv;
 extern crate chrono;
 extern crate r2d2_diesel;
+extern crate mercator;
 
 use actix::prelude::*;
 use actix_web::{
@@ -30,9 +31,9 @@ use actix_web::{
 //use bytes::BytesMut;
 //use futures::{Future, Stream};
 use diesel::prelude::*;
-//use diesel::r2d2::ConnectionManager;
+use diesel::r2d2::{Pool};
 use r2d2_diesel::ConnectionManager;
-//use r2d2::Pool;
+use std::sync::Arc;
 
 mod db;
 mod models;
@@ -64,13 +65,15 @@ fn main() -> Result<(), Box<Error>> {
     let pool = r2d2::Pool::new(manager)
         .expect("Failed to create pool.");
     let addr = SyncArbiter::start(3, move || DbExecutor(pool.clone()));
+    //let addr = Arc::new(DbExecutor(pool.clone()));
     // Start http server
     server::new(move || {
         App::with_state(AppState{db: addr.clone()})
             // enable logger
             .middleware(middleware::Logger::default())
             .resource("/members", |r| {
-                r.post().f(members_post);
+                //r.post().f(members_post);
+                r.post().with(members_post2);
                 r.put().f(members_put);
                 r.delete().f(members_delete);
             })
