@@ -28,6 +28,7 @@ pub struct Member {
 pub struct MemberUpdate {
     pub member_id: i32,
     pub name: Option<String>,
+    pub email: Option<String>,
     pub enable: Option<i8>,
     pub gender: Option<i8>,
     pub phone: Option<String>,

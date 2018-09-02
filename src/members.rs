@@ -29,6 +29,7 @@ pub struct MembersParams {
 pub struct MembersPutParams {
     pub member_id: i32,
     pub name: Option<String>,
+    pub email: Option<String>,
     pub enable: Option<i8>,
     pub gender: Option<i8>,
     pub phone: Option<String>,
@@ -105,6 +106,28 @@ pub fn members_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespon
     .responder()
 }
 
+pub fn members_put2((item, req): (Json<MembersPutParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
+    let o = item.clone();
+    req.state().db
+        .send(MembersPutParams {
+            member_id: o.member_id,
+            name: o.name,
+            email: o.email,
+            enable: o.enable,
+            gender: o.gender,
+            phone: o.phone,
+            password: o.password,
+            member_level: o.member_level,
+            pic_url: o.pic_url,
+        })
+        .from_err()
+        .and_then(|res| match res {
+            Ok(user) => Ok(HttpResponse::Ok().json(user)),
+            Err(x) => Ok(HttpResponse::Ok().json(x.to_string())),
+        })
+        .responder()
+}
+
 pub fn members_put(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
     let _db = req.state().db.clone();
     req.payload()
@@ -131,6 +154,7 @@ pub fn members_put(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespons
             let new_user = models::MemberUpdate {
                 member_id: o.member_id,
                 name: o.name,
+                email: o.email,
                 enable: o.enable,
                 gender: o.gender,
                 phone: o.phone,

@@ -22,14 +22,13 @@ pub struct AppState {
     pub db: Addr<DbExecutor>,
 }
 
-impl Message for members::MembersParams {
-    type Result = Result<models::Member, Error>;
-}
-
 impl Actor for DbExecutor {
     type Context = SyncContext<Self>;
 }
 
+impl Message for members::MembersParams {
+    type Result = Result<models::Member, Error>;
+}
 impl Handler<members::MembersParams> for DbExecutor {
     type Result = Result<models::Member, Error>;
 
@@ -48,6 +47,39 @@ impl Handler<members::MembersParams> for DbExecutor {
         let data = conn.transaction::<_, Error, _>(|| {
             diesel::insert_into(member).values(&new_user).execute(conn)?;
             member.order(member_id.desc()).first(conn)
+        });
+        match data {
+            Ok(x) => Ok(x),
+            Err(x) => Err(error::ErrorInternalServerError(x))
+        }
+    }
+}
+
+impl Message for members::MembersPutParams {
+    type Result = Result<models::Member, Error>;
+}
+impl Handler<members::MembersPutParams> for DbExecutor {
+    type Result = Result<models::Member, Error>;
+
+    fn handle(&mut self, msg: members::MembersPutParams, _: &mut Self::Context) -> Self::Result {
+        use self::schema::member::dsl::*;
+        println!("{:?}", msg);
+        let mid = msg.member_id.clone();
+        let new_user = models::MemberUpdate {
+            member_id: msg.member_id,
+            name: msg.name,
+            email: msg.email,
+            gender: msg.gender,
+            enable: msg.enable,
+            phone: msg.phone,
+            password: msg.password,
+            member_level: msg.member_level,
+        };
+        let conn: &MysqlConnection = &self.0.get().unwrap();
+        use diesel::result::Error;
+        let data = conn.transaction::<_, Error, _>(|| {
+            diesel::update(member.find(mid)).set(&new_user).execute(conn)?;
+            member.find(mid).first(conn)
         });
         match data {
             Ok(x) => Ok(x),
