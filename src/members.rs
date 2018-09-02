@@ -26,7 +26,7 @@ pub struct MembersParams {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MembersPutParams {
+pub struct MemberPutParams {
     pub member_id: i32,
     pub name: Option<String>,
     pub email: Option<String>,
@@ -36,6 +36,11 @@ pub struct MembersPutParams {
     pub password: Option<String>,
     pub member_level: Option<i8>,
     pub pic_url: Option<Vec<String>>,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MemberDeleteParams {
+    pub member_id: i32,
 }
 
 pub fn members_post2((item, req): (Json<MembersParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
@@ -106,10 +111,10 @@ pub fn members_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespon
     .responder()
 }
 
-pub fn members_put2((item, req): (Json<MembersPutParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
+pub fn members_put2((item, req): (Json<MemberPutParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
     let o = item.clone();
     req.state().db
-        .send(MembersPutParams {
+        .send(MemberPutParams {
             member_id: o.member_id,
             name: o.name,
             email: o.email,
@@ -143,11 +148,11 @@ pub fn members_put(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespons
         .and_then(move |body| {
             use self::schema::member::dsl::*;
             use diesel::result::Error;
-            let o = serde_json::from_slice::<MembersPutParams>(&body);
+            let o = serde_json::from_slice::<MemberPutParams>(&body);
             if let Err(x) = o {
                 return Ok(HttpResponse::Ok().json(x.to_string()))
             };
-            let o:MembersPutParams = o.unwrap();
+            let o:MemberPutParams = o.unwrap();
             let conn: MysqlConnection = MysqlConnection::establish("mysql://eat:eateat@localhost/eat").unwrap();
             println!("{:?}", o);
             let mid = o.member_id.clone();
@@ -173,6 +178,28 @@ pub fn members_put(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespons
     .responder()
 }
 
+pub fn members_delete2((item, req): (Json<MemberDeleteParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
+    let o = item.clone();
+    req.state().db
+        .send(MemberDeleteParams {
+            member_id: o.member_id,
+        })
+        .from_err()
+        .and_then(|res| match res {
+            Ok(_) => {
+                let mut hash = HashMap::new();
+                hash.insert("msg", "ok");
+                Ok(HttpResponse::Ok().json(hash))
+            },
+            Err(x) => {
+                let mut hash = HashMap::new();
+                hash.insert("msg", x.to_string());
+                Ok(HttpResponse::Ok().json(hash))
+            },
+        })
+        .responder()
+}
+
 pub fn members_delete(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
     let _db = req.state().db.clone();
     req.payload()
@@ -188,7 +215,7 @@ pub fn members_delete(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResp
         .and_then(move |body| {
             use self::schema::member::dsl::*;
             //use diesel::result::Error;
-            let o:MembersPutParams = serde_json::from_slice::<MembersPutParams>(&body)?;
+            let o:MemberPutParams = serde_json::from_slice::<MemberPutParams>(&body)?;
             let conn: MysqlConnection = MysqlConnection::establish("mysql://eat:eateat@localhost/eat").unwrap();
             println!("{:?}", o);
             let mid = o.member_id.clone();

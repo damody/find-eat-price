@@ -75,7 +75,7 @@ fn main() -> Result<(), Box<Error>> {
                 //r.post().f(members_post);
                 r.post().with(members_post2);
                 r.put().with(members_put2);
-                r.delete().f(members_delete);
+                r.delete().with(members_delete2);
             })
             .resource("/restaurants", |r| {
                 r.post().f(restaurants_post);

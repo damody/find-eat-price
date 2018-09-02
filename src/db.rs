@@ -55,13 +55,13 @@ impl Handler<members::MembersParams> for DbExecutor {
     }
 }
 
-impl Message for members::MembersPutParams {
+impl Message for members::MemberPutParams {
     type Result = Result<models::Member, Error>;
 }
-impl Handler<members::MembersPutParams> for DbExecutor {
+impl Handler<members::MemberPutParams> for DbExecutor {
     type Result = Result<models::Member, Error>;
 
-    fn handle(&mut self, msg: members::MembersPutParams, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: members::MemberPutParams, _: &mut Self::Context) -> Self::Result {
         use self::schema::member::dsl::*;
         println!("{:?}", msg);
         let mid = msg.member_id.clone();
@@ -83,6 +83,33 @@ impl Handler<members::MembersPutParams> for DbExecutor {
         });
         match data {
             Ok(x) => Ok(x),
+            Err(x) => Err(error::ErrorInternalServerError(x))
+        }
+    }
+}
+
+
+impl Message for members::MemberDeleteParams {
+    type Result = Result<(), Error>;
+}
+impl Handler<members::MemberDeleteParams> for DbExecutor {
+    type Result = Result<(), Error>;
+
+    fn handle(&mut self, msg: members::MemberDeleteParams, _: &mut Self::Context) -> Self::Result {
+        use self::schema::member::dsl::*;
+        println!("{:?}", msg);
+        let mid = msg.member_id.clone();
+        let conn: &MysqlConnection = &self.0.get().unwrap();
+        use diesel::result::Error;
+        let res = diesel::delete(member.find(mid)).execute(conn);
+        match res {
+            Ok(x) => {
+                if x == 1 {
+                    Ok(())
+                } else {
+                    Err(error::ErrorInternalServerError("item not found.".to_string()))
+                }    
+            },
             Err(x) => Err(error::ErrorInternalServerError(x))
         }
     }
