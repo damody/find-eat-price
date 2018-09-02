@@ -20,7 +20,7 @@ r2d2 = "0.8"
 r2d2-diesel = {path = "../r2d2-diesel"}
 dotenv = "0.10"
 diesel_codegen = { version = "*", features = ["mysql"] }
-mercator = {path = "../mercator"}
+mercator = "0.1"
 
 [dependencies.diesel]
 version = "1.3"

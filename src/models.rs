@@ -23,6 +23,18 @@ pub struct Member {
     pub join_date: NaiveDateTime,
 }
 
+#[derive(Deserialize, AsChangeset)]
+#[table_name = "member"]
+pub struct MemberUpdate {
+    pub member_id: i32,
+    pub name: Option<String>,
+    pub enable: Option<i8>,
+    pub gender: Option<i8>,
+    pub phone: Option<String>,
+    pub password: Option<String>,
+    pub member_level: Option<i8>,
+}
+
 #[derive(Deserialize, Insertable, Default)]
 #[table_name = "member"]
 pub struct NewMember {

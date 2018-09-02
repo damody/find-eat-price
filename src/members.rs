@@ -22,7 +22,7 @@ pub struct MembersParams {
     pub phone: Option<String>,
     pub password: String,
     pub gender: i8,
-    pub pic_url: Vec<String>,
+    pub pic_url: Option<Vec<String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -37,34 +37,21 @@ pub struct MembersPutParams {
     pub pic_url: Option<Vec<String>>,
 }
 
-use super::schema::member;
-#[derive(Deserialize, AsChangeset)]
-#[table_name = "member"]
-pub struct MembersPut1 {
-    pub member_id: i32,
-    pub name: Option<String>,
-    pub enable: Option<i8>,
-    pub gender: Option<i8>,
-    pub phone: Option<String>,
-    pub password: Option<String>,
-    pub member_level: Option<i8>,
-}
-
 pub fn members_post2((item, req): (Json<MembersParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
-    // HttpRequest::payload() is stream of Bytes objects
     let o = item.clone();
     req.state().db
-        .send(db::CreateMember {
+        .send(MembersParams {
             name: o.name,
             email: o.email,
             password: o.password,
             gender: o.gender,
-            phone: None,
+            phone: o.phone,
+            pic_url: o.pic_url,
         })
         .from_err()
         .and_then(|res| match res {
             Ok(user) => Ok(HttpResponse::Ok().json(user)),
-            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+            Err(x) => Ok(HttpResponse::Ok().json(x.to_string())),
         })
         .responder()
 }
@@ -72,23 +59,10 @@ pub fn members_post2((item, req): (Json<MembersParams>, HttpRequest<AppState>)) 
 const MAX_SIZE: usize = 262_144; // max payload size is 256k
 /// Async request handler
 pub fn members_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpResponse, Error = Error>> {
-    // HttpRequest::payload() is stream of Bytes objects
     let _db = req.state().db.clone();
-    match *req.method() {
-        http::Method::GET => println!("get"),
-        http::Method::POST => println!("post"),
-        http::Method::PUT => println!("put"),
-        _ => println!("other"),
-    };
-    
     req.payload()
-        // `Future::from_err` acts like `?` in that it coerces the error type from
-        // the future into the final error type
         .from_err()
-        // `fold` will asynchronously read each chunk of the request body and
-        // call supplied closure, then it resolves to result of closure
         .fold(BytesMut::new(), move |mut body, chunk| {
-            // limit max size of in-memory payload
             if (body.len() + chunk.len()) > MAX_SIZE {
                 Err(error::ErrorBadRequest("overflow"))
             } else {
@@ -96,13 +70,9 @@ pub fn members_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespon
                 Ok(body)
             }
         })
-        // `Future::and_then` can be used to merge an asynchronous workflow with a
-        // synchronous workflow
         .and_then(move |body| {
             use self::schema::member::dsl::*;
             use diesel::result::Error;
-            
-            // body is loaded, now we can deserialize serde-json
             let o = serde_json::from_slice::<MembersParams>(&body);
             if let Err(x) = o {
                 return Ok(HttpResponse::Ok().json(x.to_string()))
@@ -127,16 +97,6 @@ pub fn members_post(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespon
                 member.order(member_id.desc()).first(&conn)
             });
             let o:MembersParams = serde_json::from_slice::<MembersParams>(&body)?;
-            // r2d2 fail so comment
-            /*
-            _db.send(db::CreateMember {
-                name: o.name,
-                email: o.email,
-                password: o.password,
-                gender: o.gender,
-                phone: None,
-            });
-            */
             match data {
                 Ok(x) => Ok(HttpResponse::Ok().json(x)),
                 Err(x) => Ok(HttpResponse::Ok().json(models::ErrorMessage {error : x.to_string()}))
@@ -168,7 +128,7 @@ pub fn members_put(req: &HttpRequest<AppState>) -> Box<Future<Item = HttpRespons
             let conn: MysqlConnection = MysqlConnection::establish("mysql://eat:eateat@localhost/eat").unwrap();
             println!("{:?}", o);
             let mid = o.member_id.clone();
-            let new_user = MembersPut1 {
+            let new_user = models::MemberUpdate {
                 member_id: o.member_id,
                 name: o.name,
                 enable: o.enable,
