@@ -73,9 +73,9 @@ fn main() -> Result<(), Box<Error>> {
             .middleware(middleware::Logger::default())
             .resource("/members", |r| {
                 //r.post().f(members_post);
-                r.post().with(members_post2);
-                r.put().with(members_put2);
-                r.delete().with(members_delete2);
+                r.post().with(members_post);
+                r.put().with(members_put);
+                r.delete().with(members_delete);
             })
             .resource("/restaurants", |r| {
                 r.post().f(restaurants_post);
