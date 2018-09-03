@@ -66,12 +66,12 @@ pub struct Restaurant {
 #[derive(Deserialize, Insertable, Default)]
 #[table_name = "restaurant"]
 pub struct NewRestaurant {
-    pub name: String,
-    pub phone: String,
-    pub email: String,
-    pub chain_id: i32,
     pub author_id: i32,
-    pub food_id: Option<i32>,
+    pub name: String,
+    pub phone: Option<String>,
+    pub email: Option<String>,
+    pub chain_id: Option<i32>,
+    pub food_id: i32,
     pub open_time: Option<String>,
     pub close_time: Option<String>,
 }
@@ -84,4 +84,17 @@ pub struct NewRestaurantPos {
     pub lat: f32,
     pub twd97x: f32,
     pub twd97y: f32,
+}
+
+#[derive(Deserialize, AsChangeset)]
+#[table_name = "restaurant"]
+pub struct RestaurantUpdate {
+    pub restaurant_id: i32,
+    pub name: Option<String>,
+    pub enable: Option<i8>,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub chain_id: Option<i32>,
+    pub open_time: Option<String>,
+    pub close_time: Option<String>,
 }

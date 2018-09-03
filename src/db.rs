@@ -8,7 +8,7 @@ use r2d2_diesel::ConnectionManager;
 //use r2d2_diesel::ConnectionManager;
 //use r2d2::Pool;
 use members;
-
+use restaurants;
 use models;
 use schema;
 
@@ -88,7 +88,6 @@ impl Handler<members::MemberPutParams> for DbExecutor {
     }
 }
 
-
 impl Message for members::MemberDeleteParams {
     type Result = Result<(), Error>;
 }
@@ -100,8 +99,98 @@ impl Handler<members::MemberDeleteParams> for DbExecutor {
         println!("{:?}", msg);
         let mid = msg.member_id.clone();
         let conn: &MysqlConnection = &self.0.get().unwrap();
-        use diesel::result::Error;
         let res = diesel::delete(member.find(mid)).execute(conn);
+        match res {
+            Ok(x) => {
+                if x == 1 {
+                    Ok(())
+                } else {
+                    Err(error::ErrorInternalServerError("item not found.".to_string()))
+                }    
+            },
+            Err(x) => Err(error::ErrorInternalServerError(x))
+        }
+    }
+}
+
+impl Message for restaurants::RestaurantParams {
+    type Result = Result<models::Restaurant, Error>;
+}
+impl Handler<restaurants::RestaurantParams> for DbExecutor {
+    type Result = Result<models::Restaurant, Error>;
+
+    fn handle(&mut self, msg: restaurants::RestaurantParams, _: &mut Self::Context) -> Self::Result {
+        use self::schema::restaurant::dsl::*;
+        println!("{:?}", msg);
+        let new_user = models::NewRestaurant {
+            author_id: msg.author_id,
+            name: msg.name,
+            phone: msg.phone,
+            email: msg.email,
+            chain_id: msg.chain_id,
+            food_id: 0,
+            open_time: msg.open_time,
+            close_time: msg.close_time,
+        };
+        let conn: &MysqlConnection = &self.0.get().unwrap();
+        use diesel::result::Error;
+        let data = conn.transaction::<_, Error, _>(|| {
+            diesel::insert_into(restaurant).values(&new_user).execute(conn)?;
+            restaurant.order(restaurant_id.desc()).first(conn)
+        });
+        match data {
+            Ok(x) => Ok(x),
+            Err(x) => Err(error::ErrorInternalServerError(x))
+        }
+    }
+}
+
+
+impl Message for restaurants::RestaurantPutParams {
+    type Result = Result<models::Restaurant, Error>;
+}
+impl Handler<restaurants::RestaurantPutParams> for DbExecutor {
+    type Result = Result<models::Restaurant, Error>;
+
+    fn handle(&mut self, msg: restaurants::RestaurantPutParams, _: &mut Self::Context) -> Self::Result {
+        use self::schema::restaurant::dsl::*;
+        println!("{:?}", msg);
+        let mid = msg.restaurant_id.clone();
+        let new_user = models::RestaurantUpdate {
+            restaurant_id: msg.restaurant_id,
+            name: msg.name,
+            phone: msg.phone,
+            email: msg.email,
+            enable: msg.enable,
+            chain_id: msg.chain_id,
+            open_time: msg.open_time,
+            close_time: msg.close_time,
+        };
+        let conn: &MysqlConnection = &self.0.get().unwrap();
+        use diesel::result::Error;
+        let data = conn.transaction::<_, Error, _>(|| {
+            diesel::update(restaurant.find(mid)).set(&new_user).execute(conn)?;
+            restaurant.find(mid).first(conn)
+        });
+        match data {
+            Ok(x) => Ok(x),
+            Err(x) => Err(error::ErrorInternalServerError(x))
+        }
+    }
+}
+
+impl Message for restaurants::RestaurantDeleteParams {
+    type Result = Result<(), Error>;
+}
+impl Handler<restaurants::RestaurantDeleteParams> for DbExecutor {
+    type Result = Result<(), Error>;
+
+    fn handle(&mut self, msg: restaurants::RestaurantDeleteParams, _: &mut Self::Context) -> Self::Result {
+        use self::schema::restaurant::dsl::*;
+        println!("{:?}", msg);
+        let mid = msg.restaurant_id.clone();
+        let conn: &MysqlConnection = &self.0.get().unwrap();
+        let res = diesel::delete(restaurant.find(mid)).execute(conn);
         match res {
             Ok(x) => {
                 if x == 1 {

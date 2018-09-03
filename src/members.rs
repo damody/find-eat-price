@@ -1,19 +1,11 @@
 use actix_web::{
-    error, http, AsyncResponder, Error, HttpMessage,
+    AsyncResponder,
     HttpRequest, HttpResponse, FutureResponse, Json
 };
 
-use bytes::BytesMut;
-use serde_json;
-use db;
 use db::{AppState};
-use futures::{Future, Stream};
-use models;
-use schema;
-use diesel;
-use diesel::prelude::*;
+use futures::{Future};
 use std::collections::HashMap;
-use futures::future::{join_all, ok as fut_ok};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MembersParams {

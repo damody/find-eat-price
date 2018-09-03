@@ -31,9 +31,7 @@ use actix_web::{
 //use bytes::BytesMut;
 //use futures::{Future, Stream};
 use diesel::prelude::*;
-use diesel::r2d2::{Pool};
 use r2d2_diesel::ConnectionManager;
-use std::sync::Arc;
 
 mod db;
 mod models;
@@ -78,9 +76,9 @@ fn main() -> Result<(), Box<Error>> {
                 r.delete().with(members_delete);
             })
             .resource("/restaurants", |r| {
-                r.post().f(restaurants_post);
-                r.put().f(restaurants_put);
-                r.delete().f(restaurants_delete);
+                r.post().with(restaurants_post);
+                r.put().with(restaurants_put);
+                r.delete().with(restaurants_delete);
             })
             .resource("/wgs84_to_twd97", |r| {
                 r.post().f(geo_convert::wgs84_to_twd97);
