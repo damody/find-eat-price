@@ -24,6 +24,33 @@ table! {
 }
 
 table! {
+    food (food_id) {
+        food_id -> Integer,
+        restaurant_id -> Integer,
+        tag -> Integer,
+        name -> Varchar,
+        price -> Integer,
+        input_date -> Datetime,
+    }
+}
+
+table! {
+    food_log (modify_date) {
+        food_id -> Integer,
+        member_id -> Integer,
+        discrption -> Varchar,
+        modify_date -> Datetime,
+    }
+}
+
+table! {
+    food_tag (food_id, tag) {
+        food_id -> Integer,
+        tag -> Integer,
+    }
+}
+
+table! {
     like_restaurant (member_id, restaurant_id) {
         member_id -> Integer,
         restaurant_id -> Integer,
@@ -47,6 +74,14 @@ table! {
 }
 
 table! {
+    member_log (modify_date) {
+        member_id -> Integer,
+        discrption -> Varchar,
+        modify_date -> Datetime,
+    }
+}
+
+table! {
     member_vip_record (member_id, member_level) {
         member_id -> Integer,
         member_level -> Tinyint,
@@ -58,9 +93,6 @@ table! {
     menu (menu_id) {
         menu_id -> Integer,
         restaurant_id -> Integer,
-        tag -> Integer,
-        name -> Varchar,
-        price -> Integer,
         input_date -> Datetime,
     }
 }
@@ -83,10 +115,19 @@ table! {
         enable -> Tinyint,
         good -> Integer,
         bad -> Integer,
-        food_id -> Integer,
+        menu_id -> Integer,
         open_time -> Varchar,
         close_time -> Varchar,
         input_date -> Datetime,
+    }
+}
+
+table! {
+    restaurant_log (modify_date) {
+        restaurant_id -> Integer,
+        member_id -> Integer,
+        discrption -> Varchar,
+        modify_date -> Datetime,
     }
 }
 
@@ -118,12 +159,17 @@ allow_tables_to_appear_in_same_query!(
     blacklist,
     chain,
     chain_tag,
+    food,
+    food_log,
+    food_tag,
     like_restaurant,
     member,
+    member_log,
     member_vip_record,
     menu,
     menu_tag,
     restaurant,
+    restaurant_log,
     restaurant_pos,
     restaurant_tag,
     tag_name,

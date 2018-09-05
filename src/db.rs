@@ -128,18 +128,49 @@ impl Handler<restaurants::RestaurantParams> for DbExecutor {
             phone: msg.phone,
             email: msg.email,
             chain_id: msg.chain_id,
-            food_id: 0,
+            menu_id: msg.menu_id,
             open_time: msg.open_time,
             close_time: msg.close_time,
         };
         let conn: &MysqlConnection = &self.0.get().unwrap();
         use diesel::result::Error;
-        let data = conn.transaction::<_, Error, _>(|| {
+        let data:Result<models::Restaurant, Error> = conn.transaction::<_, Error, _>(|| {
             diesel::insert_into(restaurant).values(&new_user).execute(conn)?;
             restaurant.order(restaurant_id.desc()).first(conn)
         });
         match data {
-            Ok(x) => Ok(x),
+            Ok(mut x) => {
+                use self::schema::menu::dsl::*;
+                let mid = x.restaurant_id.clone();
+                let new_menu = models::NewMenu {
+                    restaurant_id: mid.clone(),
+                };
+                let tmenu:Result<models::Menu, Error> = conn.transaction::<_, Error, _>(|| {
+                    diesel::insert_into(menu).values(&new_menu).execute(conn)?;
+                    menu.order(menu_id.desc()).first(conn)
+                });
+                match tmenu {
+                    Ok(y) => {
+                        let nupdate = models::RestaurantUpdate {
+                            restaurant_id: mid.clone(),
+                            name: None,
+                            phone: None,
+                            email: None,
+                            enable: None,
+                            chain_id: None,
+                            menu_id: Some(y.menu_id),
+                            open_time: None,
+                            close_time: None,
+                        };
+                        if let Err(x) = diesel::update(restaurant.find(mid)).set(&nupdate).execute(conn) {
+                            return Err(error::ErrorInternalServerError(x))
+                        };
+                        x.menu_id = y.menu_id;
+                    },
+                    Err(y) => ()
+                };
+                Ok(x)
+            },
             Err(x) => Err(error::ErrorInternalServerError(x))
         }
     }
@@ -163,6 +194,7 @@ impl Handler<restaurants::RestaurantPutParams> for DbExecutor {
             email: msg.email,
             enable: msg.enable,
             chain_id: msg.chain_id,
+            menu_id: msg.menu_id,
             open_time: msg.open_time,
             close_time: msg.close_time,
         };

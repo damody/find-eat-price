@@ -10,3 +10,8 @@ DROP TABLE chain_tag;
 DROP TABLE restaurant_tag;
 DROP TABLE menu;
 DROP TABLE menu_tag;
+DROP TABLE food_tag;
+DROP TABLE food;
+DROP TABLE food_log;
+DROP TABLE restaurant_log;
+DROP TABLE member_log;

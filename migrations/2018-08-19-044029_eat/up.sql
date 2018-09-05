@@ -64,7 +64,7 @@ CREATE TABLE restaurant
     enable TINYINT DEFAULT 1 NOT NULL,
     good INT DEFAULT 0 NOT NULL,
     bad INT DEFAULT 0 NOT NULL,
-    food_id INT DEFAULT -1 NOT NULL,
+    menu_id INT DEFAULT -1 NOT NULL,
     open_time VARCHAR(128) DEFAULT '' NOT NULL,
     close_time VARCHAR(128) DEFAULT '' NOT NULL,
     input_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -121,9 +121,6 @@ CREATE TABLE menu
 (
     menu_id INT NOT NULL AUTO_INCREMENT UNIQUE,
     restaurant_id INT NOT NULL,
-    tag INT NOT NULL,
-    name VARCHAR(128) NOT NULL,
-    price INT NOT NULL,
     input_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     PRIMARY Key(menu_id)
 );
@@ -133,4 +130,48 @@ CREATE TABLE menu_tag
     menu_id INT NOT NULL,
     tag INT NOT NULL,
     PRIMARY Key(menu_id, tag)
+);
+
+CREATE TABLE food_tag
+(
+    food_id INT NOT NULL,
+    tag INT NOT NULL,
+    PRIMARY Key(food_id, tag)
+);
+
+CREATE TABLE food
+(
+    food_id INT NOT NULL AUTO_INCREMENT UNIQUE,
+    restaurant_id INT NOT NULL,
+    tag INT NOT NULL,
+    name VARCHAR(128) NOT NULL,
+    price INT NOT NULL,
+    input_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    PRIMARY Key(food_id)
+);
+
+CREATE TABLE food_log
+(
+    food_id INT NOT NULL,
+    member_id INT NOT NULL,
+    discrption VARCHAR(128) NOT NULL,
+    modify_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    PRIMARY Key(modify_date)
+);
+
+CREATE TABLE restaurant_log
+(
+    restaurant_id INT NOT NULL,
+    member_id INT NOT NULL,
+    discrption VARCHAR(128) NOT NULL,
+    modify_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    PRIMARY Key(modify_date)
+);
+
+CREATE TABLE member_log
+(
+    member_id INT NOT NULL,
+    discrption VARCHAR(128) NOT NULL,
+    modify_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    PRIMARY Key(modify_date)
 );

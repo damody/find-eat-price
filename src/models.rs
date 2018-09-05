@@ -2,6 +2,7 @@
 extern crate chrono;
 use chrono::NaiveDateTime;
 use super::schema::member;
+use super::schema::menu;
 use super::schema::restaurant;
 use super::schema::restaurant_pos;
 
@@ -57,7 +58,7 @@ pub struct Restaurant {
     pub enable: i8,
     pub good: i32,
     pub bad: i32,
-    pub food_id: i32,
+    pub menu_id: i32,
     pub open_time: String,
     pub close_time: String,
     pub input_date: NaiveDateTime,
@@ -71,7 +72,7 @@ pub struct NewRestaurant {
     pub phone: Option<String>,
     pub email: Option<String>,
     pub chain_id: Option<i32>,
-    pub food_id: i32,
+    pub menu_id: Option<i32>,
     pub open_time: Option<String>,
     pub close_time: Option<String>,
 }
@@ -95,6 +96,20 @@ pub struct RestaurantUpdate {
     pub email: Option<String>,
     pub phone: Option<String>,
     pub chain_id: Option<i32>,
+    pub menu_id: Option<i32>,
     pub open_time: Option<String>,
     pub close_time: Option<String>,
+}
+
+#[derive(Serialize, Queryable)]
+pub struct Menu {
+    pub menu_id: i32,
+    pub restaurant_id: i32,
+    pub input_date: NaiveDateTime,
+}
+
+#[derive(Deserialize, Insertable, Default)]
+#[table_name = "menu"]
+pub struct NewMenu {
+    pub restaurant_id: i32,
 }

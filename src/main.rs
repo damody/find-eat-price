@@ -63,14 +63,12 @@ fn main() -> Result<(), Box<Error>> {
     let pool = r2d2::Pool::new(manager)
         .expect("Failed to create pool.");
     let addr = SyncArbiter::start(3, move || DbExecutor(pool.clone()));
-    //let addr = Arc::new(DbExecutor(pool.clone()));
     // Start http server
     server::new(move || {
         App::with_state(AppState{db: addr.clone()})
             // enable logger
             .middleware(middleware::Logger::default())
             .resource("/members", |r| {
-                //r.post().f(members_post);
                 r.post().with(members_post);
                 r.put().with(members_put);
                 r.delete().with(members_delete);
