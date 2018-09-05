@@ -92,7 +92,6 @@ table! {
 table! {
     menu (menu_id) {
         menu_id -> Integer,
-        restaurant_id -> Integer,
         input_date -> Datetime,
     }
 }
@@ -118,6 +117,10 @@ table! {
         menu_id -> Integer,
         open_time -> Varchar,
         close_time -> Varchar,
+        lng -> Float,
+        lat -> Float,
+        twd97x -> Float,
+        twd97y -> Float,
         input_date -> Datetime,
     }
 }
@@ -128,16 +131,6 @@ table! {
         member_id -> Integer,
         discrption -> Varchar,
         modify_date -> Datetime,
-    }
-}
-
-table! {
-    restaurant_pos (restaurant_id) {
-        restaurant_id -> Integer,
-        lng -> Float,
-        lat -> Float,
-        twd97x -> Float,
-        twd97y -> Float,
     }
 }
 
@@ -170,7 +163,6 @@ allow_tables_to_appear_in_same_query!(
     menu_tag,
     restaurant,
     restaurant_log,
-    restaurant_pos,
     restaurant_tag,
     tag_name,
 );

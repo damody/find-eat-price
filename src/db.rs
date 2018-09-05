@@ -11,6 +11,7 @@ use members;
 use restaurants;
 use models;
 use schema;
+use mercator;
 
 pub type DBPool = Pool<ConnectionManager<MysqlConnection>>;
 
@@ -120,59 +121,47 @@ impl Handler<restaurants::RestaurantParams> for DbExecutor {
     type Result = Result<models::Restaurant, Error>;
 
     fn handle(&mut self, msg: restaurants::RestaurantParams, _: &mut Self::Context) -> Self::Result {
-        use self::schema::restaurant::dsl::*;
+        use self::schema::menu::dsl as menu_dsl;
         println!("{:?}", msg);
-        let new_user = models::NewRestaurant {
-            author_id: msg.author_id,
-            name: msg.name,
-            phone: msg.phone,
-            email: msg.email,
-            chain_id: msg.chain_id,
-            menu_id: msg.menu_id,
-            open_time: msg.open_time,
-            close_time: msg.close_time,
-        };
         let conn: &MysqlConnection = &self.0.get().unwrap();
         use diesel::result::Error;
-        let data:Result<models::Restaurant, Error> = conn.transaction::<_, Error, _>(|| {
-            diesel::insert_into(restaurant).values(&new_user).execute(conn)?;
-            restaurant.order(restaurant_id.desc()).first(conn)
+        let tmenu:Result<models::Menu, Error> = conn.transaction::<_, Error, _>(|| {
+            diesel::insert_into(menu_dsl::menu).default_values().execute(conn)?;
+            menu_dsl::menu.order(menu_dsl::menu_id.desc()).first(conn)
         });
-        match data {
-            Ok(mut x) => {
-                use self::schema::menu::dsl::*;
-                let mid = x.restaurant_id.clone();
-                let new_menu = models::NewMenu {
-                    restaurant_id: mid.clone(),
+        match tmenu {
+            Ok(tm) => {
+                use self::schema::restaurant::dsl as restaurant_dsl;
+                let lng = msg.lng;
+                let lat = msg.lat;
+                let (x,y) = mercator::wgs84_to_twd97(lng as f64, lat as f64);
+                let new_user = models::NewRestaurant {
+                    author_id: msg.author_id,
+                    name: msg.name,
+                    phone: msg.phone,
+                    email: msg.email,
+                    chain_id: msg.chain_id,
+                    menu_id: Some(tm.menu_id),
+                    open_time: msg.open_time,
+                    close_time: msg.close_time,
+                    lng: lng,
+                    lat: lat,
+                    twd97x: x as f32,
+                    twd97y: y as f32,
                 };
-                let tmenu:Result<models::Menu, Error> = conn.transaction::<_, Error, _>(|| {
-                    diesel::insert_into(menu).values(&new_menu).execute(conn)?;
-                    menu.order(menu_id.desc()).first(conn)
+                let data:Result<models::Restaurant, Error> = conn.transaction::<_, Error, _>(|| {
+                    diesel::insert_into(restaurant_dsl::restaurant).values(&new_user).execute(conn)?;
+                    restaurant_dsl::restaurant.order(restaurant_dsl::restaurant_id.desc()).first(conn)
                 });
-                match tmenu {
-                    Ok(y) => {
-                        let nupdate = models::RestaurantUpdate {
-                            restaurant_id: mid.clone(),
-                            name: None,
-                            phone: None,
-                            email: None,
-                            enable: None,
-                            chain_id: None,
-                            menu_id: Some(y.menu_id),
-                            open_time: None,
-                            close_time: None,
-                        };
-                        if let Err(x) = diesel::update(restaurant.find(mid)).set(&nupdate).execute(conn) {
-                            return Err(error::ErrorInternalServerError(x))
-                        };
-                        x.menu_id = y.menu_id;
+                match data {
+                    Ok(r) => {
+                        Ok(r)
                     },
-                    Err(y) => ()
-                };
-                Ok(x)
+                    Err(x) => Err(error::ErrorInternalServerError(x))
+                }
             },
             Err(x) => Err(error::ErrorInternalServerError(x))
-        }
+        }        
     }
 }
 
@@ -184,25 +173,51 @@ impl Handler<restaurants::RestaurantPutParams> for DbExecutor {
     type Result = Result<models::Restaurant, Error>;
 
     fn handle(&mut self, msg: restaurants::RestaurantPutParams, _: &mut Self::Context) -> Self::Result {
-        use self::schema::restaurant::dsl::*;
+        use self::schema::restaurant::dsl as restaurant_dsl;
         println!("{:?}", msg);
         let mid = msg.restaurant_id.clone();
-        let new_user = models::RestaurantUpdate {
-            restaurant_id: msg.restaurant_id,
-            name: msg.name,
-            phone: msg.phone,
-            email: msg.email,
-            enable: msg.enable,
-            chain_id: msg.chain_id,
-            menu_id: msg.menu_id,
-            open_time: msg.open_time,
-            close_time: msg.close_time,
+        let lng:f32 = msg.lng.unwrap_or(-1.0);
+        let lat:f32 = msg.lat.unwrap_or(-1.0);
+        let (twd97x,twd97y) = mercator::wgs84_to_twd97(lng as f64, lat as f64);
+        
+        let new_user = if lng > 0.0 && lat > 0.0 {
+              models::RestaurantUpdate {
+                restaurant_id: msg.restaurant_id,
+                name: msg.name,
+                phone: msg.phone,
+                email: msg.email,
+                enable: msg.enable,
+                chain_id: msg.chain_id,
+                menu_id: msg.menu_id,
+                open_time: msg.open_time,
+                close_time: msg.close_time,
+                lng: msg.lng,
+                lat: msg.lat,
+                twd97x: Some(twd97x as f32),
+                twd97y: Some(twd97y as f32),
+            }
+        } else {
+            models::RestaurantUpdate {
+                restaurant_id: msg.restaurant_id,
+                name: msg.name,
+                phone: msg.phone,
+                email: msg.email,
+                enable: msg.enable,
+                chain_id: msg.chain_id,
+                menu_id: msg.menu_id,
+                open_time: msg.open_time,
+                close_time: msg.close_time,
+                lng: None,
+                lat: None,
+                twd97x: None,
+                twd97y: None,
+            }
         };
         let conn: &MysqlConnection = &self.0.get().unwrap();
         use diesel::result::Error;
         let data = conn.transaction::<_, Error, _>(|| {
-            diesel::update(restaurant.find(mid)).set(&new_user).execute(conn)?;
-            restaurant.find(mid).first(conn)
+            diesel::update(restaurant_dsl::restaurant.find(mid)).set(&new_user).execute(conn)?;
+            restaurant_dsl::restaurant.find(mid).first(conn)
         });
         match data {
             Ok(x) => Ok(x),

@@ -67,17 +67,11 @@ CREATE TABLE restaurant
     menu_id INT DEFAULT -1 NOT NULL,
     open_time VARCHAR(128) DEFAULT '' NOT NULL,
     close_time VARCHAR(128) DEFAULT '' NOT NULL,
+    lng FLOAT NOT NULL,
+    lat FLOAT NOT NULL,
+    twd97x FLOAT NOT NULL,
+    twd97y FLOAT NOT NULL,
     input_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    PRIMARY Key(restaurant_id)
-);
--- 位置
-CREATE TABLE restaurant_pos
-(
-    restaurant_id INT NOT NULL,
-    lng FLOAT( 10, 6 ) NOT NULL,
-    lat FLOAT( 10, 6 ) NOT NULL,
-    twd97x FLOAT( 10, 6 ) NOT NULL,
-    twd97y FLOAT( 10, 6 ) NOT NULL,
     PRIMARY Key(restaurant_id)
 );
 
@@ -120,7 +114,6 @@ CREATE TABLE restaurant_tag
 CREATE TABLE menu
 (
     menu_id INT NOT NULL AUTO_INCREMENT UNIQUE,
-    restaurant_id INT NOT NULL,
     input_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     PRIMARY Key(menu_id)
 );

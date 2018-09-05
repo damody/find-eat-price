@@ -3,7 +3,6 @@ DROP TABLE member_vip_record;
 DROP TABLE like_restaurant;
 DROP TABLE blacklist;
 DROP TABLE restaurant;
-DROP TABLE restaurant_pos;
 DROP TABLE chain;
 DROP TABLE tag_name;
 DROP TABLE chain_tag;

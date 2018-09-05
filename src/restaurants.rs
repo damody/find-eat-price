@@ -14,7 +14,6 @@ pub struct RestaurantParams {
     pub phone: Option<String>,
     pub email: Option<String>,
     pub chain_id: Option<i32>,
-    pub menu_id: Option<i32>,
     pub open_time: Option<String>,
     pub close_time: Option<String>,
     pub lat: f32,
@@ -34,6 +33,8 @@ pub struct RestaurantPutParams {
     pub open_time: Option<String>,
     pub close_time: Option<String>,
     pub pic_url: Option<Vec<String>>,
+    pub lng: Option<f32>,
+    pub lat: Option<f32>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -50,7 +51,6 @@ pub fn restaurants_post((item, req): (Json<RestaurantParams>, HttpRequest<AppSta
             phone: o.phone,
             email: o.email,
             chain_id: o.chain_id,
-            menu_id: o.menu_id,
             open_time: o.open_time,
             close_time: o.close_time,
             lat: o.lat,
@@ -79,6 +79,8 @@ pub fn restaurants_put((item, req): (Json<RestaurantPutParams>, HttpRequest<AppS
             open_time: o.open_time,
             close_time: o.close_time,
             pic_url: o.pic_url,
+            lng: o.lng,
+            lat: o.lat,
         })
         .from_err()
         .and_then(|res| match res {
