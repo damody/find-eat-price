@@ -5,8 +5,7 @@
 -- member_level 會員等級
 CREATE TABLE member
 (
-    member_id VARCHAR(128) NOT NULL,
-    email VARCHAR(128) NOT NULL,
+    member_email VARCHAR(128) NOT NULL,
     name VARCHAR(128) NOT NULL,
     enable TINYINT DEFAULT 1 NOT NULL,
     gender TINYINT DEFAULT 0 NOT NULL,
@@ -14,16 +13,17 @@ CREATE TABLE member
     password VARCHAR(64) NOT NULL,
     member_level TINYINT DEFAULT 0 NOT NULL,
     join_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
-    PRIMARY Key(member_id)
+    PRIMARY Key(member_email)
 );
 -- VIP記錄
 
 CREATE TABLE member_vip_record
 (
-    member_id VARCHAR(128) NOT NULL,
+    member_email VARCHAR(128) NOT NULL,
     member_level TINYINT NOT NULL,
+    start_date DATE NOT NULL,
     expire_date DATE NOT NULL,
-    PRIMARY Key(member_id, member_level)
+    PRIMARY Key(member_email, member_level)
 );
 
 -- 喜歡的店家 
@@ -31,19 +31,19 @@ CREATE TABLE member_vip_record
 -- comment 喜歡的原因
 CREATE TABLE like_restaurant
 (
-    member_id VARCHAR(128) NOT NULL,
+    member_email VARCHAR(128) NOT NULL,
     restaurant_id INT NOT NULL,
     good TINYINT NOT NULL,
     comment VARCHAR(1024) NOT NULL,
-    PRIMARY Key(member_id, restaurant_id)
+    PRIMARY Key(member_email, restaurant_id)
 );
 
 CREATE TABLE blacklist
 (
-    member_id VARCHAR(128) NOT NULL,
+    member_email VARCHAR(128) NOT NULL,
     restaurant_id INT NOT NULL,
     comment VARCHAR(1024) NOT NULL,
-    PRIMARY Key(member_id, restaurant_id)
+    PRIMARY Key(member_email, restaurant_id)
 );
 
 -- 店家資訊
@@ -150,7 +150,7 @@ CREATE TABLE food
 CREATE TABLE food_log
 (
     food_id VARCHAR(128) NOT NULL,
-    member_id VARCHAR(128) NOT NULL,
+    member_email VARCHAR(128) NOT NULL,
     discrption VARCHAR(1024) NOT NULL,
     modify_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     PRIMARY Key(modify_date)
@@ -159,7 +159,7 @@ CREATE TABLE food_log
 CREATE TABLE restaurant_log
 (
     restaurant_id VARCHAR(128) NOT NULL,
-    member_id VARCHAR(128) NOT NULL,
+    member_email VARCHAR(128) NOT NULL,
     discrption VARCHAR(1024) NOT NULL,
     modify_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     PRIMARY Key(modify_date)
@@ -167,7 +167,7 @@ CREATE TABLE restaurant_log
 
 CREATE TABLE member_log
 (
-    member_id VARCHAR(128) NOT NULL,
+    member_email VARCHAR(128) NOT NULL,
     discrption VARCHAR(1024) NOT NULL,
     modify_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     PRIMARY Key(modify_date)

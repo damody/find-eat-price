@@ -9,7 +9,7 @@ use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MemberParams {
-    pub email: String,
+    pub member_email: String,
     pub name: String,
     pub phone: Option<String>,
     pub password: String,
@@ -19,9 +19,8 @@ pub struct MemberParams {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MemberPutParams {
-    pub member_id: String,
+    pub member_email: String,
     pub name: Option<String>,
-    pub email: Option<String>,
     pub enable: Option<i8>,
     pub gender: Option<i8>,
     pub phone: Option<String>,
@@ -32,15 +31,15 @@ pub struct MemberPutParams {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MemberDeleteParams {
-    pub member_id: String,
+    pub member_email: String,
 }
 
 pub fn member_post((item, req): (Json<MemberParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
     let o = item.clone();
     req.state().db
         .send(MemberParams {
+            member_email: o.member_email,
             name: o.name,
-            email: o.email,
             password: o.password,
             gender: o.gender,
             phone: o.phone,
@@ -49,7 +48,11 @@ pub fn member_post((item, req): (Json<MemberParams>, HttpRequest<AppState>)) -> 
         .from_err()
         .and_then(|res| match res {
             Ok(user) => Ok(HttpResponse::Ok().json(user)),
-            Err(x) => Ok(HttpResponse::Ok().json(x.to_string())),
+            Err(x) => {
+                let mut hash = HashMap::new();
+                hash.insert("error", x.to_string());
+                Ok(HttpResponse::Ok().json(hash))
+            },
         })
         .responder()
 }
@@ -58,9 +61,8 @@ pub fn member_put((item, req): (Json<MemberPutParams>, HttpRequest<AppState>)) -
     let o = item.clone();
     req.state().db
         .send(MemberPutParams {
-            member_id: o.member_id,
+            member_email: o.member_email,
             name: o.name,
-            email: o.email,
             enable: o.enable,
             gender: o.gender,
             phone: o.phone,
@@ -71,7 +73,11 @@ pub fn member_put((item, req): (Json<MemberPutParams>, HttpRequest<AppState>)) -
         .from_err()
         .and_then(|res| match res {
             Ok(user) => Ok(HttpResponse::Ok().json(user)),
-            Err(x) => Ok(HttpResponse::Ok().json(x.to_string())),
+            Err(x) => {
+                let mut hash = HashMap::new();
+                hash.insert("error", x.to_string());
+                Ok(HttpResponse::Ok().json(hash))
+            },
         })
         .responder()
 }
@@ -80,7 +86,7 @@ pub fn member_delete((item, req): (Json<MemberDeleteParams>, HttpRequest<AppStat
     let o = item.clone();
     req.state().db
         .send(MemberDeleteParams {
-            member_id: o.member_id,
+            member_email: o.member_email,
         })
         .from_err()
         .and_then(|res| match res {
@@ -91,7 +97,7 @@ pub fn member_delete((item, req): (Json<MemberDeleteParams>, HttpRequest<AppStat
             },
             Err(x) => {
                 let mut hash = HashMap::new();
-                hash.insert("msg", x.to_string());
+                hash.insert("error", x.to_string());
                 Ok(HttpResponse::Ok().json(hash))
             },
         })

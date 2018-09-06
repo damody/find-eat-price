@@ -70,7 +70,11 @@ pub fn restaurant_post((item, req): (Json<RestaurantParams>, HttpRequest<AppStat
         .from_err()
         .and_then(|res| match res {
             Ok(user) => Ok(HttpResponse::Ok().json(user)),
-            Err(x) => Ok(HttpResponse::Ok().json(x.to_string())),
+            Err(x) => {
+                let mut hash = HashMap::new();
+                hash.insert("error", x.to_string());
+                Ok(HttpResponse::Ok().json(hash))
+            },
         })
         .responder()
 }
@@ -95,7 +99,11 @@ pub fn restaurant_put((item, req): (Json<RestaurantPutParams>, HttpRequest<AppSt
         .from_err()
         .and_then(|res| match res {
             Ok(user) => Ok(HttpResponse::Ok().json(user)),
-            Err(x) => Ok(HttpResponse::Ok().json(x.to_string())),
+            Err(x) => {
+                let mut hash = HashMap::new();
+                hash.insert("error", x.to_string());
+                Ok(HttpResponse::Ok().json(hash))
+            },
         })
         .responder()
 }
@@ -136,7 +144,11 @@ pub fn restaurant_search((item, req): (Json<RestaurantSearchParams>, HttpRequest
         .from_err()
         .and_then(|res| match res {
             Ok(user) => Ok(HttpResponse::Ok().json(user)),
-            Err(x) => Ok(HttpResponse::Ok().json(x.to_string())),
+            Err(x) => {
+                let mut hash = HashMap::new();
+                hash.insert("error", x.to_string());
+                Ok(HttpResponse::Ok().json(hash))
+            },
         })
         .responder()
 }

@@ -12,8 +12,7 @@ pub struct ErrorMessage {
 
 #[derive(Serialize, Queryable)]
 pub struct Member {
-    pub member_id: String,
-    pub email: String,
+    pub member_email: String,
     pub name: String,
     pub enable: i8,
     pub gender: i8,
@@ -26,9 +25,7 @@ pub struct Member {
 #[derive(Deserialize, AsChangeset)]
 #[table_name = "member"]
 pub struct MemberUpdate {
-    pub member_id: String,
     pub name: Option<String>,
-    pub email: Option<String>,
     pub enable: Option<i8>,
     pub gender: Option<i8>,
     pub phone: Option<String>,
@@ -39,7 +36,7 @@ pub struct MemberUpdate {
 #[derive(Deserialize, Insertable, Default)]
 #[table_name = "member"]
 pub struct NewMember {
-    pub email: String,
+    pub member_email: String,
     pub name: String,
     pub phone: String,
     pub password: String,

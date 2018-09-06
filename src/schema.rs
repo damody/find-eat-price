@@ -1,6 +1,6 @@
 table! {
-    blacklist (member_id, restaurant_id) {
-        member_id -> Varchar,
+    blacklist (member_email, restaurant_id) {
+        member_email -> Varchar,
         restaurant_id -> Integer,
         comment -> Varchar,
     }
@@ -39,7 +39,7 @@ table! {
 table! {
     food_log (modify_date) {
         food_id -> Varchar,
-        member_id -> Varchar,
+        member_email -> Varchar,
         discrption -> Varchar,
         modify_date -> Datetime,
     }
@@ -53,8 +53,8 @@ table! {
 }
 
 table! {
-    like_restaurant (member_id, restaurant_id) {
-        member_id -> Varchar,
+    like_restaurant (member_email, restaurant_id) {
+        member_email -> Varchar,
         restaurant_id -> Integer,
         good -> Tinyint,
         comment -> Varchar,
@@ -62,9 +62,8 @@ table! {
 }
 
 table! {
-    member (member_id) {
-        member_id -> Varchar,
-        email -> Varchar,
+    member (member_email) {
+        member_email -> Varchar,
         name -> Varchar,
         enable -> Tinyint,
         gender -> Tinyint,
@@ -77,16 +76,17 @@ table! {
 
 table! {
     member_log (modify_date) {
-        member_id -> Varchar,
+        member_email -> Varchar,
         discrption -> Varchar,
         modify_date -> Datetime,
     }
 }
 
 table! {
-    member_vip_record (member_id, member_level) {
-        member_id -> Varchar,
+    member_vip_record (member_email, member_level) {
+        member_email -> Varchar,
         member_level -> Tinyint,
+        start_date -> Date,
         expire_date -> Date,
     }
 }
@@ -132,7 +132,7 @@ table! {
 table! {
     restaurant_log (modify_date) {
         restaurant_id -> Varchar,
-        member_id -> Varchar,
+        member_email -> Varchar,
         discrption -> Varchar,
         modify_date -> Datetime,
     }

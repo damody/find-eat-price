@@ -38,7 +38,7 @@ impl Handler<member::MemberParams> for DbExecutor {
         use self::schema::member::dsl::*;
         println!("{:?}", msg);
         let new_user = models::NewMember {
-            email: msg.email,
+            member_email: msg.member_email,
             name: msg.name,
             password: msg.password,
             gender: msg.gender,
@@ -48,7 +48,7 @@ impl Handler<member::MemberParams> for DbExecutor {
         use diesel::result::Error;
         let data = conn.transaction::<_, Error, _>(|| {
             diesel::insert_into(member).values(&new_user).execute(conn)?;
-            member.order(member_id.desc()).first(conn)
+            member.order(member_email.desc()).first(conn)
         });
         match data {
             Ok(x) => Ok(x),
@@ -66,11 +66,9 @@ impl Handler<member::MemberPutParams> for DbExecutor {
     fn handle(&mut self, msg: member::MemberPutParams, _: &mut Self::Context) -> Self::Result {
         use self::schema::member::dsl::*;
         println!("{:?}", msg);
-        let mid = msg.member_id.clone();
+        let mid = msg.member_email.clone();
         let new_user = models::MemberUpdate {
-            member_id: msg.member_id,
             name: msg.name,
-            email: msg.email,
             gender: msg.gender,
             enable: msg.enable,
             phone: msg.phone,
@@ -99,7 +97,7 @@ impl Handler<member::MemberDeleteParams> for DbExecutor {
     fn handle(&mut self, msg: member::MemberDeleteParams, _: &mut Self::Context) -> Self::Result {
         use self::schema::member::dsl::*;
         println!("{:?}", msg);
-        let mid = msg.member_id.clone();
+        let mid = msg.member_email.clone();
         let conn: &MysqlConnection = &self.0.get().unwrap();
         let res = diesel::delete(member.find(mid)).execute(conn);
         match res {
