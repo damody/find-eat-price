@@ -8,7 +8,7 @@ use futures::{Future};
 use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MembersParams {
+pub struct FoodParams {
     pub email: String,
     pub name: String,
     pub phone: Option<String>,
@@ -18,27 +18,27 @@ pub struct MembersParams {
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MemberPutParams {
-    pub member_id: i32,
+pub struct FoodPutParams {
+    pub food_id: i32,
     pub name: Option<String>,
     pub email: Option<String>,
     pub enable: Option<i8>,
     pub gender: Option<i8>,
     pub phone: Option<String>,
     pub password: Option<String>,
-    pub member_level: Option<i8>,
+    pub food_level: Option<i8>,
     pub pic_url: Option<Vec<String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MemberDeleteParams {
-    pub member_id: i32,
+pub struct FoodDeleteParams {
+    pub food_id: i32,
 }
 
-pub fn members_post((item, req): (Json<MembersParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
+pub fn food_post((item, req): (Json<FoodParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
     let o = item.clone();
     req.state().db
-        .send(MembersParams {
+        .send(FoodParams {
             name: o.name,
             email: o.email,
             password: o.password,
@@ -54,18 +54,18 @@ pub fn members_post((item, req): (Json<MembersParams>, HttpRequest<AppState>)) -
         .responder()
 }
 
-pub fn members_put((item, req): (Json<MemberPutParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
+pub fn food_put((item, req): (Json<FoodPutParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
     let o = item.clone();
     req.state().db
-        .send(MemberPutParams {
-            member_id: o.member_id,
+        .send(FoodPutParams {
+            food_id: o.food_id,
             name: o.name,
             email: o.email,
             enable: o.enable,
             gender: o.gender,
             phone: o.phone,
             password: o.password,
-            member_level: o.member_level,
+            food_level: o.food_level,
             pic_url: o.pic_url,
         })
         .from_err()
@@ -76,11 +76,11 @@ pub fn members_put((item, req): (Json<MemberPutParams>, HttpRequest<AppState>)) 
         .responder()
 }
 
-pub fn members_delete((item, req): (Json<MemberDeleteParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
+pub fn food_delete((item, req): (Json<FoodDeleteParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
     let o = item.clone();
     req.state().db
-        .send(MemberDeleteParams {
-            member_id: o.member_id,
+        .send(FoodDeleteParams {
+            food_id: o.food_id,
         })
         .from_err()
         .and_then(|res| match res {

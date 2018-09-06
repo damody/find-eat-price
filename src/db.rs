@@ -7,8 +7,8 @@ use diesel::r2d2::{Pool};
 use r2d2_diesel::ConnectionManager;
 //use r2d2_diesel::ConnectionManager;
 //use r2d2::Pool;
-use members;
-use restaurants;
+use member;
+use restaurant;
 use models;
 use schema;
 use mercator;
@@ -27,13 +27,13 @@ impl Actor for DbExecutor {
     type Context = SyncContext<Self>;
 }
 
-impl Message for members::MembersParams {
+impl Message for member::MemberParams {
     type Result = Result<models::Member, Error>;
 }
-impl Handler<members::MembersParams> for DbExecutor {
+impl Handler<member::MemberParams> for DbExecutor {
     type Result = Result<models::Member, Error>;
 
-    fn handle(&mut self, msg: members::MembersParams, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: member::MemberParams, _: &mut Self::Context) -> Self::Result {
         use self::schema::member::dsl::*;
         println!("{:?}", msg);
         let new_user = models::NewMember {
@@ -56,13 +56,13 @@ impl Handler<members::MembersParams> for DbExecutor {
     }
 }
 
-impl Message for members::MemberPutParams {
+impl Message for member::MemberPutParams {
     type Result = Result<models::Member, Error>;
 }
-impl Handler<members::MemberPutParams> for DbExecutor {
+impl Handler<member::MemberPutParams> for DbExecutor {
     type Result = Result<models::Member, Error>;
 
-    fn handle(&mut self, msg: members::MemberPutParams, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: member::MemberPutParams, _: &mut Self::Context) -> Self::Result {
         use self::schema::member::dsl::*;
         println!("{:?}", msg);
         let mid = msg.member_id.clone();
@@ -89,13 +89,13 @@ impl Handler<members::MemberPutParams> for DbExecutor {
     }
 }
 
-impl Message for members::MemberDeleteParams {
+impl Message for member::MemberDeleteParams {
     type Result = Result<(), Error>;
 }
-impl Handler<members::MemberDeleteParams> for DbExecutor {
+impl Handler<member::MemberDeleteParams> for DbExecutor {
     type Result = Result<(), Error>;
 
-    fn handle(&mut self, msg: members::MemberDeleteParams, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: member::MemberDeleteParams, _: &mut Self::Context) -> Self::Result {
         use self::schema::member::dsl::*;
         println!("{:?}", msg);
         let mid = msg.member_id.clone();
@@ -114,13 +114,13 @@ impl Handler<members::MemberDeleteParams> for DbExecutor {
     }
 }
 
-impl Message for restaurants::RestaurantParams {
+impl Message for restaurant::RestaurantParams {
     type Result = Result<models::Restaurant, Error>;
 }
-impl Handler<restaurants::RestaurantParams> for DbExecutor {
+impl Handler<restaurant::RestaurantParams> for DbExecutor {
     type Result = Result<models::Restaurant, Error>;
 
-    fn handle(&mut self, msg: restaurants::RestaurantParams, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: restaurant::RestaurantParams, _: &mut Self::Context) -> Self::Result {
         use self::schema::menu::dsl as menu_dsl;
         println!("{:?}", msg);
         let conn: &MysqlConnection = &self.0.get().unwrap();
@@ -166,13 +166,13 @@ impl Handler<restaurants::RestaurantParams> for DbExecutor {
 }
 
 
-impl Message for restaurants::RestaurantPutParams {
+impl Message for restaurant::RestaurantPutParams {
     type Result = Result<models::Restaurant, Error>;
 }
-impl Handler<restaurants::RestaurantPutParams> for DbExecutor {
+impl Handler<restaurant::RestaurantPutParams> for DbExecutor {
     type Result = Result<models::Restaurant, Error>;
 
-    fn handle(&mut self, msg: restaurants::RestaurantPutParams, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: restaurant::RestaurantPutParams, _: &mut Self::Context) -> Self::Result {
         use self::schema::restaurant::dsl as restaurant_dsl;
         println!("{:?}", msg);
         let mid = msg.restaurant_id.clone();
@@ -225,13 +225,13 @@ impl Handler<restaurants::RestaurantPutParams> for DbExecutor {
     }
 }
 
-impl Message for restaurants::RestaurantDeleteParams {
+impl Message for restaurant::RestaurantDeleteParams {
     type Result = Result<(), Error>;
 }
-impl Handler<restaurants::RestaurantDeleteParams> for DbExecutor {
+impl Handler<restaurant::RestaurantDeleteParams> for DbExecutor {
     type Result = Result<(), Error>;
 
-    fn handle(&mut self, msg: restaurants::RestaurantDeleteParams, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: restaurant::RestaurantDeleteParams, _: &mut Self::Context) -> Self::Result {
         use self::schema::restaurant::dsl::*;
         println!("{:?}", msg);
         let mid = msg.restaurant_id.clone();
@@ -256,13 +256,13 @@ fn length(x1:f32, y1:f32, x2:f32, y2:f32) -> f32 {
     return (x*x+y*y).sqrt();
 }
 
-impl Message for restaurants::RestaurantSearchParams {
+impl Message for restaurant::RestaurantSearchParams {
     type Result = Result<Vec<models::RestaurantSearchRes>, Error>;
 }
-impl Handler<restaurants::RestaurantSearchParams> for DbExecutor {
+impl Handler<restaurant::RestaurantSearchParams> for DbExecutor {
     type Result = Result<Vec<models::RestaurantSearchRes>, Error>;
 
-    fn handle(&mut self, msg: restaurants::RestaurantSearchParams, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: restaurant::RestaurantSearchParams, _: &mut Self::Context) -> Self::Result {
         use self::schema::restaurant::dsl as restaurant_dsl;
         println!("{:?}", msg);
         
@@ -285,6 +285,12 @@ impl Handler<restaurants::RestaurantSearchParams> for DbExecutor {
             data = data.filter(restaurant_dsl::twd97x.between(x-range*0.5f32, x+range*0.5f32));
             data = data.filter(restaurant_dsl::twd97y.between(y-range*0.5f32, y+range*0.5f32));
         };
+        if msg.like.is_some() {
+            data = data.filter(restaurant_dsl::good.ge(msg.like.unwrap()));
+        }
+        if msg.dislike.is_some() {
+            data = data.filter(restaurant_dsl::bad.le(msg.dislike.unwrap()));
+        }
         let data = data.load::<models::Restaurant>(conn);
         
         match data {

@@ -36,12 +36,12 @@ use r2d2_diesel::ConnectionManager;
 mod db;
 mod models;
 mod schema;
-mod members;
-mod restaurants;
+mod member;
+mod restaurant;
 mod geo_convert;
 
-use members::*;
-use restaurants::*;
+use member::*;
+use restaurant::*;
 use db::{DbExecutor, AppState};
 
 /// 404 handler
@@ -68,19 +68,24 @@ fn main() -> Result<(), Box<Error>> {
         App::with_state(AppState{db: addr.clone()})
             // enable logger
             .middleware(middleware::Logger::default())
-            .resource("/members", |r| {
-                r.post().with(members_post);
-                r.put().with(members_put);
-                r.delete().with(members_delete);
+            .resource("/member", |r| {
+                r.post().with(member_post);
+                r.put().with(member_put);
+                r.delete().with(member_delete);
             })
-            .resource("/restaurants", |r| {
-                r.post().with(restaurants_post);
-                r.put().with(restaurants_put);
-                r.delete().with(restaurants_delete);
+            .resource("/restaurant", |r| {
+                r.post().with(restaurant_post);
+                r.put().with(restaurant_put);
+                r.delete().with(restaurant_delete);
             })
-            .resource("/restaurants/search", |r| {
-                r.post().with(restaurants_search);
-            })
+            .resource("/restaurant/search", |r| {
+                r.post().with(restaurant_search);
+            })/*
+            .resource("/foods", |r| {
+                r.post().with(foods_post);
+                r.put().with(foods_put);
+                r.delete().with(foods_delete);
+            })*/
             .resource("/wgs84_to_twd97", |r| {
                 r.post().f(geo_convert::wgs84_to_twd97);
             })

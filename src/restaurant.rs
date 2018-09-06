@@ -50,10 +50,9 @@ pub struct RestaurantSearchParams {
     pub range: Option<f32>,
     pub like: Option<i32>,
     pub dislike: Option<i32>,
-    pub stars: Option<i32>,
 }
 
-pub fn restaurants_post((item, req): (Json<RestaurantParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
+pub fn restaurant_post((item, req): (Json<RestaurantParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
     let o = item.clone();
     req.state().db
         .send(RestaurantParams {
@@ -76,7 +75,7 @@ pub fn restaurants_post((item, req): (Json<RestaurantParams>, HttpRequest<AppSta
         .responder()
 }
 
-pub fn restaurants_put((item, req): (Json<RestaurantPutParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
+pub fn restaurant_put((item, req): (Json<RestaurantPutParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
     let o = item.clone();
     req.state().db
         .send(RestaurantPutParams {
@@ -101,7 +100,7 @@ pub fn restaurants_put((item, req): (Json<RestaurantPutParams>, HttpRequest<AppS
         .responder()
 }
 
-pub fn restaurants_delete((item, req): (Json<RestaurantDeleteParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
+pub fn restaurant_delete((item, req): (Json<RestaurantDeleteParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
     let o = item.clone();
     req.state().db
         .send(RestaurantDeleteParams {
@@ -123,7 +122,7 @@ pub fn restaurants_delete((item, req): (Json<RestaurantDeleteParams>, HttpReques
         .responder()
 }
 
-pub fn restaurants_search((item, req): (Json<RestaurantSearchParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
+pub fn restaurant_search((item, req): (Json<RestaurantSearchParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
     let o = item.clone();
     req.state().db
         .send(RestaurantSearchParams {
@@ -133,7 +132,6 @@ pub fn restaurants_search((item, req): (Json<RestaurantSearchParams>, HttpReques
             range: o.range,
             like: o.like,
             dislike: o.dislike,
-            stars: o.stars,
         })
         .from_err()
         .and_then(|res| match res {
