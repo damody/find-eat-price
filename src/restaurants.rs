@@ -42,6 +42,17 @@ pub struct RestaurantDeleteParams {
     pub restaurant_id: i32,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct RestaurantSearchParams {
+    pub name: Option<String>,
+    pub lat: Option<f32>,
+    pub lng: Option<f32>,
+    pub range: Option<f32>,
+    pub like: Option<i32>,
+    pub dislike: Option<i32>,
+    pub stars: Option<i32>,
+}
+
 pub fn restaurants_post((item, req): (Json<RestaurantParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
     let o = item.clone();
     req.state().db
@@ -111,3 +122,24 @@ pub fn restaurants_delete((item, req): (Json<RestaurantDeleteParams>, HttpReques
         })
         .responder()
 }
+
+pub fn restaurants_search((item, req): (Json<RestaurantSearchParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
+    let o = item.clone();
+    req.state().db
+        .send(RestaurantSearchParams {
+            name: o.name,
+            lng: o.lng,
+            lat: o.lat,
+            range: o.range,
+            like: o.like,
+            dislike: o.dislike,
+            stars: o.stars,
+        })
+        .from_err()
+        .and_then(|res| match res {
+            Ok(user) => Ok(HttpResponse::Ok().json(user)),
+            Err(x) => Ok(HttpResponse::Ok().json(x.to_string())),
+        })
+        .responder()
+}
+

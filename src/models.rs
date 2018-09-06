@@ -66,6 +66,23 @@ pub struct Restaurant {
     pub input_date: NaiveDateTime,
 }
 
+#[derive(Serialize, Queryable)]
+pub struct RestaurantSearchRes {
+    pub restaurant_id: i32,
+    pub chain_id: i32,
+    pub name: String,
+    pub good: i32,
+    pub bad: i32,
+    pub menu_id: i32,
+    pub open_time: String,
+    pub close_time: String,
+    pub lng: f32,
+    pub lat: f32,
+    pub twd97x: f32,
+    pub twd97y: f32,
+    pub distance: f32,
+}
+
 #[derive(Deserialize, Insertable, Default)]
 #[table_name = "restaurant"]
 pub struct NewRestaurant {

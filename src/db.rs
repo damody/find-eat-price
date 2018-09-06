@@ -176,12 +176,11 @@ impl Handler<restaurants::RestaurantPutParams> for DbExecutor {
         use self::schema::restaurant::dsl as restaurant_dsl;
         println!("{:?}", msg);
         let mid = msg.restaurant_id.clone();
-        let lng:f32 = msg.lng.unwrap_or(-1.0);
-        let lat:f32 = msg.lat.unwrap_or(-1.0);
-        let (twd97x,twd97y) = mercator::wgs84_to_twd97(lng as f64, lat as f64);
-        
-        let new_user = if lng > 0.0 && lat > 0.0 {
-              models::RestaurantUpdate {
+        let new_user = if msg.lng.is_some() && msg.lat.is_some() {
+            let lng:f32 = msg.lng.unwrap();
+            let lat:f32 = msg.lat.unwrap();
+            let (twd97x,twd97y) = mercator::wgs84_to_twd97(lng as f64, lat as f64);
+            models::RestaurantUpdate {
                 restaurant_id: msg.restaurant_id,
                 name: msg.name,
                 phone: msg.phone,
@@ -246,6 +245,69 @@ impl Handler<restaurants::RestaurantDeleteParams> for DbExecutor {
                     Err(error::ErrorInternalServerError("item not found.".to_string()))
                 }    
             },
+            Err(x) => Err(error::ErrorInternalServerError(x))
+        }
+    }
+}
+
+fn length(x1:f32, y1:f32, x2:f32, y2:f32) -> f32 {
+    let x = x1-x2;
+    let y = y1-y2;
+    return (x*x+y*y).sqrt();
+}
+
+impl Message for restaurants::RestaurantSearchParams {
+    type Result = Result<Vec<models::RestaurantSearchRes>, Error>;
+}
+impl Handler<restaurants::RestaurantSearchParams> for DbExecutor {
+    type Result = Result<Vec<models::RestaurantSearchRes>, Error>;
+
+    fn handle(&mut self, msg: restaurants::RestaurantSearchParams, _: &mut Self::Context) -> Self::Result {
+        use self::schema::restaurant::dsl as restaurant_dsl;
+        println!("{:?}", msg);
+        
+        let conn: &MysqlConnection = &self.0.get().unwrap();
+        let mut data = restaurant_dsl::restaurant.into_boxed();
+        data = data.filter(restaurant_dsl::enable.eq(1));
+        if msg.name.is_some() {
+            data = data.filter(restaurant_dsl::name.like(format!("%{}%", msg.name.unwrap())));
+        };
+        let mut x:f32 = 0.0;
+        let mut y:f32 = 0.0;
+        if msg.lng.is_some() && msg.lat.is_some() && msg.range.is_some() {
+            let lng = msg.lng.unwrap();
+            let lat = msg.lat.unwrap();
+            let range = msg.range.unwrap();
+            let (xx,yy) = mercator::wgs84_to_twd97(lng as f64, lat as f64);
+            x = xx as f32;
+            y = yy as f32;
+
+            data = data.filter(restaurant_dsl::twd97x.between(x-range*0.5f32, x+range*0.5f32));
+            data = data.filter(restaurant_dsl::twd97y.between(y-range*0.5f32, y+range*0.5f32));
+        };
+        let data = data.load::<models::Restaurant>(conn);
+        
+        match data {
+            Ok(defd) => {
+                let res = defd.into_iter().map(move |v:models::Restaurant| {
+                    models::RestaurantSearchRes {
+                        restaurant_id: v.restaurant_id,
+                        chain_id: v.chain_id,
+                        name: v.name,
+                        good: v.good,
+                        bad: v.bad,
+                        menu_id: v.menu_id,
+                        open_time: v.open_time,
+                        close_time: v.close_time,
+                        lng: v.lng,
+                        lat: v.lat,
+                        twd97x: v.twd97x,
+                        twd97y: v.twd97y,
+                        distance: length(v.twd97x, v.twd97y, x, y),
+                    }
+                }).rev().collect();
+                Ok(res)
+                },
             Err(x) => Err(error::ErrorInternalServerError(x))
         }
     }
