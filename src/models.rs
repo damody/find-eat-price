@@ -63,6 +63,7 @@ pub struct Restaurant {
     pub lat: f32,
     pub twd97x: f32,
     pub twd97y: f32,
+    pub pic_urls: String,
     pub input_date: NaiveDateTime,
 }
 
@@ -81,6 +82,7 @@ pub struct RestaurantSearchRes {
     pub twd97x: f32,
     pub twd97y: f32,
     pub distance: f32,
+    pub pic_urls: String,
 }
 
 #[derive(Deserialize, Insertable, Default)]
@@ -98,6 +100,7 @@ pub struct NewRestaurant {
     pub lat: f32,
     pub twd97x: f32,
     pub twd97y: f32,
+    pub pic_urls: Option<String>,
 }
 
 #[derive(Deserialize, AsChangeset)]
@@ -116,10 +119,12 @@ pub struct RestaurantUpdate {
     pub lat: Option<f32>,
     pub twd97x: Option<f32>,
     pub twd97y: Option<f32>,
+    pub pic_urls: Option<String>,
 }
 
 #[derive(Serialize, Queryable)]
 pub struct Menu {
     pub menu_id: i32,
+    pub pic_urls: String,
     pub input_date: NaiveDateTime,
 }

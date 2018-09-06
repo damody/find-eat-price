@@ -13,6 +13,7 @@ table! {
         good -> Integer,
         bad -> Integer,
         comment -> Varchar,
+        pic_urls -> Varchar,
     }
 }
 
@@ -20,6 +21,7 @@ table! {
     chain_tag (chain_id, tag) {
         chain_id -> Integer,
         tag -> Integer,
+        pic_url -> Varchar,
     }
 }
 
@@ -30,6 +32,7 @@ table! {
         tag -> Integer,
         name -> Varchar,
         price -> Integer,
+        pic_urls -> Varchar,
         input_date -> Datetime,
     }
 }
@@ -92,6 +95,7 @@ table! {
 table! {
     menu (menu_id) {
         menu_id -> Integer,
+        pic_urls -> Varchar,
         input_date -> Datetime,
     }
 }
@@ -121,6 +125,7 @@ table! {
         lat -> Float,
         twd97x -> Float,
         twd97y -> Float,
+        pic_urls -> Varchar,
         input_date -> Datetime,
     }
 }
@@ -145,6 +150,7 @@ table! {
     tag_name (tag) {
         tag -> Integer,
         name -> Varchar,
+        pic_url -> Varchar,
     }
 }
 

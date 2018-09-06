@@ -148,6 +148,7 @@ impl Handler<restaurant::RestaurantParams> for DbExecutor {
                     lat: lat,
                     twd97x: x as f32,
                     twd97y: y as f32,
+                    pic_urls: Some(json!(msg.pic_url.unwrap_or(vec![])).to_string()),
                 };
                 let data:Result<models::Restaurant, Error> = conn.transaction::<_, Error, _>(|| {
                     diesel::insert_into(restaurant_dsl::restaurant).values(&new_user).execute(conn)?;
@@ -194,6 +195,7 @@ impl Handler<restaurant::RestaurantPutParams> for DbExecutor {
                 lat: msg.lat,
                 twd97x: Some(twd97x as f32),
                 twd97y: Some(twd97y as f32),
+                pic_urls: Some(json!(msg.pic_url.unwrap_or(vec![])).to_string()),
             }
         } else {
             models::RestaurantUpdate {
@@ -210,6 +212,7 @@ impl Handler<restaurant::RestaurantPutParams> for DbExecutor {
                 lat: None,
                 twd97x: None,
                 twd97y: None,
+                pic_urls: Some(json!(msg.pic_url.unwrap_or(vec![])).to_string()),
             }
         };
         let conn: &MysqlConnection = &self.0.get().unwrap();
@@ -310,6 +313,7 @@ impl Handler<restaurant::RestaurantSearchParams> for DbExecutor {
                         twd97x: v.twd97x,
                         twd97y: v.twd97y,
                         distance: length(v.twd97x, v.twd97y, x, y),
+                        pic_urls: v.pic_urls,
                     }
                 }).rev().collect();
                 Ok(res)

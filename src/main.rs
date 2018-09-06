@@ -5,6 +5,7 @@
 //! that use diesel. Technically sync actors are worker style actors, multiple
 //! of them can run in parallel and process messages from same queue.
 extern crate serde;
+#[macro_use]
 extern crate serde_json;
 #[macro_use]
 extern crate serde_derive;

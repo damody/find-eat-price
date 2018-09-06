@@ -34,7 +34,7 @@ CREATE TABLE like_restaurant
     member_id INT NOT NULL,
     restaurant_id INT NOT NULL,
     good TINYINT NOT NULL,
-    comment VARCHAR(500) NOT NULL,
+    comment VARCHAR(1000) NOT NULL,
     PRIMARY Key(member_id, restaurant_id)
 );
 
@@ -42,7 +42,7 @@ CREATE TABLE blacklist
 (
     member_id INT NOT NULL,
     restaurant_id INT NOT NULL,
-    comment VARCHAR(500) NOT NULL,
+    comment VARCHAR(1000) NOT NULL,
     PRIMARY Key(member_id, restaurant_id)
 );
 
@@ -71,6 +71,7 @@ CREATE TABLE restaurant
     lat FLOAT NOT NULL,
     twd97x FLOAT NOT NULL,
     twd97y FLOAT NOT NULL,
+    pic_urls VARCHAR(1000) DEFAULT '' NOT NULL,
     input_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     PRIMARY Key(restaurant_id)
 );
@@ -84,7 +85,8 @@ CREATE TABLE chain
     name VARCHAR(128) NOT NULL UNIQUE,
     good INT DEFAULT 0 NOT NULL,
     bad INT DEFAULT 0 NOT NULL,
-    comment VARCHAR(500) DEFAULT '' NOT NULL,
+    comment VARCHAR(1000) DEFAULT '' NOT NULL,
+    pic_urls VARCHAR(1000) DEFAULT '' NOT NULL,
     PRIMARY Key(chain_id)
 );
 -- 標籤：素食、牛肉、雞肉、泰國、川菜等等
@@ -92,6 +94,7 @@ CREATE TABLE tag_name
 (
     tag INT NOT NULL,
     name VARCHAR(128) NOT NULL,
+    pic_url VARCHAR(128) DEFAULT '' NOT NULL,
     PRIMARY Key(tag)
 );
 -- 連鎖店標籤
@@ -99,6 +102,7 @@ CREATE TABLE chain_tag
 (
     chain_id INT NOT NULL,
     tag INT NOT NULL,
+    pic_url VARCHAR(128) DEFAULT '' NOT NULL,
     PRIMARY Key(chain_id, tag)
 );
 -- 店面標籤
@@ -106,6 +110,7 @@ CREATE TABLE restaurant_tag
 (
     restaurant_id INT NOT NULL,
     tag INT NOT NULL,
+    pic_url VARCHAR(128) DEFAULT '' NOT NULL,
     PRIMARY Key(restaurant_id, tag)
 );
 
@@ -114,6 +119,7 @@ CREATE TABLE restaurant_tag
 CREATE TABLE menu
 (
     menu_id INT NOT NULL AUTO_INCREMENT UNIQUE,
+    pic_urls VARCHAR(1000) DEFAULT '' NOT NULL,
     input_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     PRIMARY Key(menu_id)
 );
@@ -139,6 +145,7 @@ CREATE TABLE food
     tag INT NOT NULL,
     name VARCHAR(128) NOT NULL,
     price INT NOT NULL,
+    pic_urls VARCHAR(1000) DEFAULT '' NOT NULL,
     input_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     PRIMARY Key(food_id)
 );
