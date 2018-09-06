@@ -19,7 +19,7 @@ pub struct MemberParams {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MemberPutParams {
-    pub member_id: i32,
+    pub member_id: String,
     pub name: Option<String>,
     pub email: Option<String>,
     pub enable: Option<i8>,
@@ -32,7 +32,7 @@ pub struct MemberPutParams {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct MemberDeleteParams {
-    pub member_id: i32,
+    pub member_id: String,
 }
 
 pub fn member_post((item, req): (Json<MemberParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {

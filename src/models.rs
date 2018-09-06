@@ -3,6 +3,7 @@ extern crate chrono;
 use chrono::NaiveDateTime;
 use super::schema::member;
 use super::schema::restaurant;
+use super::schema::menu;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ErrorMessage {
@@ -11,7 +12,7 @@ pub struct ErrorMessage {
 
 #[derive(Serialize, Queryable)]
 pub struct Member {
-    pub member_id: i32,
+    pub member_id: String,
     pub email: String,
     pub name: String,
     pub enable: i8,
@@ -25,7 +26,7 @@ pub struct Member {
 #[derive(Deserialize, AsChangeset)]
 #[table_name = "member"]
 pub struct MemberUpdate {
-    pub member_id: i32,
+    pub member_id: String,
     pub name: Option<String>,
     pub email: Option<String>,
     pub enable: Option<i8>,
@@ -47,16 +48,16 @@ pub struct NewMember {
 
 #[derive(Serialize, Queryable)]
 pub struct Restaurant {
-    pub restaurant_id: i32,
-    pub author_id: i32,
-    pub chain_id: i32,
+    pub restaurant_id: String,
+    pub author_id: String,
+    pub chain_id: String,
+    pub menu_id: String,
     pub name: String,
     pub email: String,
     pub phone: String,
     pub enable: i8,
     pub good: i32,
     pub bad: i32,
-    pub menu_id: i32,
     pub open_time: String,
     pub close_time: String,
     pub lng: f32,
@@ -69,12 +70,12 @@ pub struct Restaurant {
 
 #[derive(Serialize, Queryable)]
 pub struct RestaurantSearchRes {
-    pub restaurant_id: i32,
-    pub chain_id: i32,
+    pub restaurant_id: String,
+    pub chain_id: String,
     pub name: String,
+    pub menu_id: String,
     pub good: i32,
     pub bad: i32,
-    pub menu_id: i32,
     pub open_time: String,
     pub close_time: String,
     pub lng: f32,
@@ -88,12 +89,13 @@ pub struct RestaurantSearchRes {
 #[derive(Deserialize, Insertable, Default)]
 #[table_name = "restaurant"]
 pub struct NewRestaurant {
-    pub author_id: i32,
+    pub restaurant_id: String,
+    pub author_id: String,
+    pub chain_id: Option<String>,
+    pub menu_id: Option<String>,
     pub name: String,
     pub phone: Option<String>,
     pub email: Option<String>,
-    pub chain_id: Option<i32>,
-    pub menu_id: Option<i32>,
     pub open_time: Option<String>,
     pub close_time: Option<String>,
     pub lng: f32,
@@ -106,13 +108,13 @@ pub struct NewRestaurant {
 #[derive(Deserialize, AsChangeset)]
 #[table_name = "restaurant"]
 pub struct RestaurantUpdate {
-    pub restaurant_id: i32,
+    pub restaurant_id: String,
+    pub chain_id: Option<String>,
+    pub menu_id: Option<String>,
     pub name: Option<String>,
     pub enable: Option<i8>,
     pub email: Option<String>,
     pub phone: Option<String>,
-    pub chain_id: Option<i32>,
-    pub menu_id: Option<i32>,
     pub open_time: Option<String>,
     pub close_time: Option<String>,
     pub lng: Option<f32>,
@@ -124,7 +126,14 @@ pub struct RestaurantUpdate {
 
 #[derive(Serialize, Queryable)]
 pub struct Menu {
-    pub menu_id: i32,
+    pub menu_id: String,
     pub pic_urls: String,
     pub input_date: NaiveDateTime,
+}
+
+#[derive(Deserialize, Insertable, Default)]
+#[table_name = "menu"]
+pub struct NewMenu {
+    pub menu_id: String,
+    pub pic_urls: Option<String>,
 }

@@ -12,6 +12,7 @@ use restaurant;
 use models;
 use schema;
 use mercator;
+use uuid;
 
 pub type DBPool = Pool<ConnectionManager<MysqlConnection>>;
 
@@ -79,8 +80,8 @@ impl Handler<member::MemberPutParams> for DbExecutor {
         let conn: &MysqlConnection = &self.0.get().unwrap();
         use diesel::result::Error;
         let data = conn.transaction::<_, Error, _>(|| {
-            diesel::update(member.find(mid)).set(&new_user).execute(conn)?;
-            member.find(mid).first(conn)
+            diesel::update(member.find(mid.clone())).set(&new_user).execute(conn)?;
+            member.find(mid.clone()).first(conn)
         });
         match data {
             Ok(x) => Ok(x),
@@ -125,17 +126,25 @@ impl Handler<restaurant::RestaurantParams> for DbExecutor {
         println!("{:?}", msg);
         let conn: &MysqlConnection = &self.0.get().unwrap();
         use diesel::result::Error;
+        let uuid = format!("{}", uuid::Uuid::new_v4());
+        let new_menu = models::NewMenu {
+            menu_id: uuid,
+            pic_urls: None,
+        };
         let tmenu:Result<models::Menu, Error> = conn.transaction::<_, Error, _>(|| {
-            diesel::insert_into(menu_dsl::menu).default_values().execute(conn)?;
+            diesel::insert_into(menu_dsl::menu).values(&new_menu).execute(conn)?;
             menu_dsl::menu.order(menu_dsl::menu_id.desc()).first(conn)
         });
+        
         match tmenu {
             Ok(tm) => {
                 use self::schema::restaurant::dsl as restaurant_dsl;
                 let lng = msg.lng;
                 let lat = msg.lat;
                 let (x,y) = mercator::wgs84_to_twd97(lng as f64, lat as f64);
+                let uuid = format!("{}", uuid::Uuid::new_v4());
                 let new_user = models::NewRestaurant {
+                    restaurant_id: uuid,
                     author_id: msg.author_id,
                     name: msg.name,
                     phone: msg.phone,
@@ -218,8 +227,8 @@ impl Handler<restaurant::RestaurantPutParams> for DbExecutor {
         let conn: &MysqlConnection = &self.0.get().unwrap();
         use diesel::result::Error;
         let data = conn.transaction::<_, Error, _>(|| {
-            diesel::update(restaurant_dsl::restaurant.find(mid)).set(&new_user).execute(conn)?;
-            restaurant_dsl::restaurant.find(mid).first(conn)
+            diesel::update(restaurant_dsl::restaurant.find(mid.clone())).set(&new_user).execute(conn)?;
+            restaurant_dsl::restaurant.find(mid.clone()).first(conn)
         });
         match data {
             Ok(x) => Ok(x),

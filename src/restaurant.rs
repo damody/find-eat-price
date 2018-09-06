@@ -9,11 +9,11 @@ use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RestaurantParams {
-    pub author_id: i32,
+    pub author_id: String,
+    pub chain_id: Option<String>,
     pub name: String,
     pub phone: Option<String>,
     pub email: Option<String>,
-    pub chain_id: Option<i32>,
     pub open_time: Option<String>,
     pub close_time: Option<String>,
     pub lat: f32,
@@ -23,13 +23,13 @@ pub struct RestaurantParams {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RestaurantPutParams {
-    pub restaurant_id: i32,
+    pub restaurant_id: String,
+    pub chain_id: Option<String>,
+    pub menu_id: Option<String>,
     pub name: Option<String>,
     pub enable: Option<i8>,
     pub email: Option<String>,
     pub phone: Option<String>,
-    pub chain_id: Option<i32>,
-    pub menu_id: Option<i32>,
     pub open_time: Option<String>,
     pub close_time: Option<String>,
     pub pic_url: Option<Vec<String>>,
@@ -39,7 +39,7 @@ pub struct RestaurantPutParams {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RestaurantDeleteParams {
-    pub restaurant_id: i32,
+    pub restaurant_id: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
