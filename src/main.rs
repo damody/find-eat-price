@@ -67,7 +67,7 @@ fn main() -> Result<(), Box<Error>> {
     let manager = ConnectionManager::<MysqlConnection>::new(url);
     let pool = r2d2::Pool::new(manager)
         .expect("Failed to create pool.");
-    let addr = SyncArbiter::start(3, move || DbExecutor(pool.clone()));
+    let addr = SyncArbiter::start(8, move || DbExecutor(pool.clone()));
     // Start http server
     server::new(move || {
         App::with_state(AppState{db: addr.clone()})
@@ -93,6 +93,9 @@ fn main() -> Result<(), Box<Error>> {
             })
             .resource("/food/search", |r| {
                 r.post().with(food_search);
+            })
+            .resource("/food/menu", |r| {
+                r.post().with(food_menu);
             })
             .resource("/wgs84_to_twd97", |r| {
                 r.post().f(geo_convert::wgs84_to_twd97);

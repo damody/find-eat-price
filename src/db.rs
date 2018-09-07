@@ -482,3 +482,27 @@ impl Handler<food::FoodSearchParams> for DbExecutor {
         }
     }
 }
+
+impl Message for food::FoodMenuParams {
+    type Result = Result<Vec<models::Food>, Error>;
+}
+impl Handler<food::FoodMenuParams> for DbExecutor {
+    type Result = Result<Vec<models::Food>, Error>;
+
+    fn handle(&mut self, msg: food::FoodMenuParams, _: &mut Self::Context) -> Self::Result {
+        use self::schema::food::dsl as food_dsl;
+        info!("{:?}", msg);
+        
+        let conn: &MysqlConnection = &self.0.get().unwrap();
+        let mut data = food_dsl::food.into_boxed();
+        data = data.filter(food_dsl::menu_id.eq(msg.menu_id));
+        let data = data.load::<models::Food>(conn);
+        
+        match data {
+            Ok(defd) => {
+                Ok(defd)
+                },
+            Err(x) => Err(error::ErrorInternalServerError(x))
+        }
+    }
+}
