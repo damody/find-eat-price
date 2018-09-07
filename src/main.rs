@@ -38,11 +38,13 @@ mod db;
 mod models;
 mod schema;
 mod member;
+mod food;
 mod restaurant;
 mod geo_convert;
 
 use member::*;
 use restaurant::*;
+use food::*;
 use db::{DbExecutor, AppState};
 
 /// 404 handler
@@ -81,12 +83,12 @@ fn main() -> Result<(), Box<Error>> {
             })
             .resource("/restaurant/search", |r| {
                 r.post().with(restaurant_search);
-            })/*
+            })
             .resource("/foods", |r| {
-                r.post().with(foods_post);
-                r.put().with(foods_put);
-                r.delete().with(foods_delete);
-            })*/
+                r.post().with(food_post);
+                r.put().with(food_put);
+                r.delete().with(food_delete);
+            })
             .resource("/wgs84_to_twd97", |r| {
                 r.post().f(geo_convert::wgs84_to_twd97);
             })

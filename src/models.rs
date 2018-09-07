@@ -4,6 +4,7 @@ use chrono::NaiveDateTime;
 use super::schema::member;
 use super::schema::restaurant;
 use super::schema::menu;
+use super::schema::food;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ErrorMessage {
@@ -87,7 +88,7 @@ pub struct RestaurantSearchRes {
 #[table_name = "restaurant"]
 pub struct NewRestaurant {
     pub restaurant_id: String,
-    pub author_id: String,
+    pub author_email: String,
     pub chain_id: Option<String>,
     pub menu_id: Option<String>,
     pub name: String,
@@ -133,4 +134,32 @@ pub struct Menu {
 pub struct NewMenu {
     pub menu_id: String,
     pub pic_urls: Option<String>,
+}
+
+#[derive(Serialize, Queryable)]
+pub struct Food {
+    pub food_id: String,
+    pub menu_id: String,
+    pub name: String,
+    pub price: f32,
+    pub pic_urls: String,
+    pub input_date: NaiveDateTime,
+}
+
+#[derive(Deserialize, AsChangeset)]
+#[table_name = "food"]
+pub struct FoodUpdate {
+    pub name: Option<String>,
+    pub price: Option<f32>,
+    pub pic_urls: Option<String>,
+}
+
+#[derive(Deserialize, Insertable, Default)]
+#[table_name = "food"]
+pub struct NewFood {
+    pub food_id: String,
+    pub menu_id: String,
+    pub name: String,
+    pub price: f32,
+    pub pic_urls: String,
 }

@@ -1,7 +1,7 @@
 table! {
     blacklist (member_email, restaurant_id) {
         member_email -> Varchar,
-        restaurant_id -> Integer,
+        restaurant_id -> Varchar,
         comment -> Varchar,
     }
 }
@@ -28,9 +28,9 @@ table! {
 table! {
     food (food_id) {
         food_id -> Varchar,
-        restaurant_id -> Varchar,
+        menu_id -> Varchar,
         name -> Varchar,
-        price -> Integer,
+        price -> Float,
         pic_urls -> Varchar,
         input_date -> Datetime,
     }
@@ -55,7 +55,7 @@ table! {
 table! {
     like_restaurant (member_email, restaurant_id) {
         member_email -> Varchar,
-        restaurant_id -> Integer,
+        restaurant_id -> Varchar,
         good -> Tinyint,
         comment -> Varchar,
     }
@@ -109,7 +109,7 @@ table! {
 table! {
     restaurant (restaurant_id) {
         restaurant_id -> Varchar,
-        author_id -> Varchar,
+        author_email -> Varchar,
         chain_id -> Varchar,
         menu_id -> Varchar,
         name -> Varchar,

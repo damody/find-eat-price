@@ -9,47 +9,42 @@ use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FoodParams {
-    pub email: String,
+    pub menu_id: String,
     pub name: String,
-    pub phone: Option<String>,
-    pub password: String,
-    pub gender: i8,
-    pub pic_url: Option<Vec<String>>,
+    pub price: f32,
+    pub pic_urls: Option<Vec<String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FoodPutParams {
-    pub food_id: i32,
+    pub food_id: String,
     pub name: Option<String>,
-    pub email: Option<String>,
-    pub enable: Option<i8>,
-    pub gender: Option<i8>,
-    pub phone: Option<String>,
-    pub password: Option<String>,
-    pub food_level: Option<i8>,
-    pub pic_url: Option<Vec<String>>,
+    pub price: Option<f32>,
+    pub pic_urls: Option<Vec<String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FoodDeleteParams {
-    pub food_id: i32,
+    pub food_id: String,
 }
 
 pub fn food_post((item, req): (Json<FoodParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
     let o = item.clone();
     req.state().db
         .send(FoodParams {
+            menu_id: o.menu_id,
             name: o.name,
-            email: o.email,
-            password: o.password,
-            gender: o.gender,
-            phone: o.phone,
-            pic_url: o.pic_url,
+            price: o.price,
+            pic_urls: o.pic_urls,
         })
         .from_err()
         .and_then(|res| match res {
             Ok(user) => Ok(HttpResponse::Ok().json(user)),
-            Err(x) => Ok(HttpResponse::Ok().json(x.to_string())),
+            Err(x) => {
+                let mut hash = HashMap::new();
+                hash.insert("error", x.to_string());
+                Ok(HttpResponse::Ok().json(hash))
+            },
         })
         .responder()
 }
@@ -60,18 +55,17 @@ pub fn food_put((item, req): (Json<FoodPutParams>, HttpRequest<AppState>)) -> Fu
         .send(FoodPutParams {
             food_id: o.food_id,
             name: o.name,
-            email: o.email,
-            enable: o.enable,
-            gender: o.gender,
-            phone: o.phone,
-            password: o.password,
-            food_level: o.food_level,
-            pic_url: o.pic_url,
+            price: o.price,
+            pic_urls: o.pic_urls,
         })
         .from_err()
         .and_then(|res| match res {
             Ok(user) => Ok(HttpResponse::Ok().json(user)),
-            Err(x) => Ok(HttpResponse::Ok().json(x.to_string())),
+            Err(x) => {
+                let mut hash = HashMap::new();
+                hash.insert("error", x.to_string());
+                Ok(HttpResponse::Ok().json(hash))
+            },
         })
         .responder()
 }

@@ -9,6 +9,7 @@ use r2d2_diesel::ConnectionManager;
 //use r2d2::Pool;
 use member;
 use restaurant;
+use food;
 use models;
 use schema;
 use mercator;
@@ -143,7 +144,7 @@ impl Handler<restaurant::RestaurantParams> for DbExecutor {
                 let uuid = format!("{}", uuid::Uuid::new_v4());
                 let new_user = models::NewRestaurant {
                     restaurant_id: uuid,
-                    author_id: msg.author_id,
+                    author_email: msg.author_email,
                     name: msg.name,
                     phone: msg.phone,
                     email: msg.email,
@@ -155,7 +156,7 @@ impl Handler<restaurant::RestaurantParams> for DbExecutor {
                     lat: lat,
                     twd97x: x as f32,
                     twd97y: y as f32,
-                    pic_urls: Some(json!(msg.pic_url.unwrap_or(vec![])).to_string()),
+                    pic_urls: Some(json!(msg.pic_urls.unwrap_or(vec![])).to_string()),
                 };
                 let data:Result<models::Restaurant, Error> = conn.transaction::<_, Error, _>(|| {
                     diesel::insert_into(restaurant_dsl::restaurant).values(&new_user).execute(conn)?;
@@ -202,7 +203,7 @@ impl Handler<restaurant::RestaurantPutParams> for DbExecutor {
                 lat: msg.lat,
                 twd97x: Some(twd97x as f32),
                 twd97y: Some(twd97y as f32),
-                pic_urls: Some(json!(msg.pic_url.unwrap_or(vec![])).to_string()),
+                pic_urls: Some(json!(msg.pic_urls.unwrap_or(vec![])).to_string()),
             }
         } else {
             models::RestaurantUpdate {
@@ -219,7 +220,7 @@ impl Handler<restaurant::RestaurantPutParams> for DbExecutor {
                 lat: None,
                 twd97x: None,
                 twd97y: None,
-                pic_urls: Some(json!(msg.pic_url.unwrap_or(vec![])).to_string()),
+                pic_urls: Some(json!(msg.pic_urls.unwrap_or(vec![])).to_string()),
             }
         };
         let conn: &MysqlConnection = &self.0.get().unwrap();
@@ -325,6 +326,90 @@ impl Handler<restaurant::RestaurantSearchParams> for DbExecutor {
                 }).rev().collect();
                 Ok(res)
                 },
+            Err(x) => Err(error::ErrorInternalServerError(x))
+        }
+    }
+}
+
+impl Message for food::FoodParams {
+    type Result = Result<models::Food, Error>;
+}
+impl Handler<food::FoodParams> for DbExecutor {
+    type Result = Result<models::Food, Error>;
+
+    fn handle(&mut self, msg: food::FoodParams, _: &mut Self::Context) -> Self::Result {
+        use self::schema::food::dsl as food_dsl;
+        println!("{:?}", msg);
+        let uuid = format!("{}", uuid::Uuid::new_v4());
+        let new_food = models::NewFood {
+            food_id: uuid,
+            menu_id: msg.menu_id,
+            name: msg.name,
+            price: msg.price,
+            pic_urls: json!(msg.pic_urls.unwrap_or(vec![])).to_string(),
+        };
+        let conn: &MysqlConnection = &self.0.get().unwrap();
+        use diesel::result::Error;
+        let data = conn.transaction::<_, Error, _>(|| {
+            diesel::insert_into(food_dsl::food).values(&new_food).execute(conn)?;
+            food_dsl::food.order(food_dsl::food_id.desc()).first(conn)
+        });
+        match data {
+            Ok(x) => Ok(x),
+            Err(x) => Err(error::ErrorInternalServerError(x))
+        }
+    }
+}
+
+impl Message for food::FoodPutParams {
+    type Result = Result<models::Food, Error>;
+}
+impl Handler<food::FoodPutParams> for DbExecutor {
+    type Result = Result<models::Food, Error>;
+
+    fn handle(&mut self, msg: food::FoodPutParams, _: &mut Self::Context) -> Self::Result {
+        use self::schema::food::dsl as food_dsl;
+        println!("{:?}", msg);
+        let mid = msg.food_id;
+        let new_food = models::FoodUpdate {
+            name: msg.name,
+            price: msg.price,
+            pic_urls: Some(json!(msg.pic_urls.unwrap_or(vec![])).to_string()),
+        };
+        let conn: &MysqlConnection = &self.0.get().unwrap();
+        use diesel::result::Error;
+        let data = conn.transaction::<_, Error, _>(|| {
+            diesel::update(food_dsl::food.find(mid.clone())).set(&new_food).execute(conn)?;
+            food_dsl::food.find(mid.clone()).first(conn)
+        });
+        match data {
+            Ok(x) => Ok(x),
+            Err(x) => Err(error::ErrorInternalServerError(x))
+        }
+    }
+}
+
+impl Message for food::FoodDeleteParams {
+    type Result = Result<(), Error>;
+}
+impl Handler<food::FoodDeleteParams> for DbExecutor {
+    type Result = Result<(), Error>;
+
+    fn handle(&mut self, msg: food::FoodDeleteParams, _: &mut Self::Context) -> Self::Result {
+        use self::schema::food::dsl as food_dsl;
+        
+        println!("{:?}", msg);
+        let mid = msg.food_id;
+        let conn: &MysqlConnection = &self.0.get().unwrap();
+        let res = diesel::delete(food_dsl::food.find(mid)).execute(conn);
+        match res {
+            Ok(x) => {
+                if x == 1 {
+                    Ok(())
+                } else {
+                    Err(error::ErrorInternalServerError("item not found.".to_string()))
+                }    
+            },
             Err(x) => Err(error::ErrorInternalServerError(x))
         }
     }

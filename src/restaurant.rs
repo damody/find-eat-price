@@ -9,7 +9,7 @@ use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RestaurantParams {
-    pub author_id: String,
+    pub author_email: String,
     pub chain_id: Option<String>,
     pub name: String,
     pub phone: Option<String>,
@@ -18,7 +18,7 @@ pub struct RestaurantParams {
     pub close_time: Option<String>,
     pub lat: f32,
     pub lng: f32,
-    pub pic_url: Option<Vec<String>>,
+    pub pic_urls: Option<Vec<String>>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -32,7 +32,7 @@ pub struct RestaurantPutParams {
     pub phone: Option<String>,
     pub open_time: Option<String>,
     pub close_time: Option<String>,
-    pub pic_url: Option<Vec<String>>,
+    pub pic_urls: Option<Vec<String>>,
     pub lng: Option<f32>,
     pub lat: Option<f32>,
 }
@@ -56,7 +56,7 @@ pub fn restaurant_post((item, req): (Json<RestaurantParams>, HttpRequest<AppStat
     let o = item.clone();
     req.state().db
         .send(RestaurantParams {
-            author_id: o.author_id,
+            author_email: o.author_email,
             name: o.name,
             phone: o.phone,
             email: o.email,
@@ -65,7 +65,7 @@ pub fn restaurant_post((item, req): (Json<RestaurantParams>, HttpRequest<AppStat
             close_time: o.close_time,
             lat: o.lat,
             lng: o.lng,
-            pic_url: o.pic_url,
+            pic_urls: o.pic_urls,
         })
         .from_err()
         .and_then(|res| match res {
@@ -92,7 +92,7 @@ pub fn restaurant_put((item, req): (Json<RestaurantPutParams>, HttpRequest<AppSt
             menu_id: o.menu_id,
             open_time: o.open_time,
             close_time: o.close_time,
-            pic_url: o.pic_url,
+            pic_urls: o.pic_urls,
             lng: o.lng,
             lat: o.lat,
         })

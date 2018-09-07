@@ -32,7 +32,7 @@ CREATE TABLE member_vip_record
 CREATE TABLE like_restaurant
 (
     member_email VARCHAR(128) NOT NULL,
-    restaurant_id INT NOT NULL,
+    restaurant_id VARCHAR(36) NOT NULL,
     good TINYINT NOT NULL,
     comment VARCHAR(1024) NOT NULL,
     PRIMARY Key(member_email, restaurant_id)
@@ -41,7 +41,7 @@ CREATE TABLE like_restaurant
 CREATE TABLE blacklist
 (
     member_email VARCHAR(128) NOT NULL,
-    restaurant_id INT NOT NULL,
+    restaurant_id VARCHAR(36) NOT NULL,
     comment VARCHAR(1024) NOT NULL,
     PRIMARY Key(member_email, restaurant_id)
 );
@@ -54,10 +54,10 @@ CREATE TABLE blacklist
 -- chain_store_id 連鎖店id
 CREATE TABLE restaurant
 (
-    restaurant_id VARCHAR(128) NOT NULL,
-    author_id VARCHAR(128) DEFAULT '' NOT NULL,
-    chain_id VARCHAR(128) DEFAULT '' NOT NULL,
-    menu_id VARCHAR(128) DEFAULT '' NOT NULL,
+    restaurant_id VARCHAR(36) NOT NULL,
+    author_email VARCHAR(128) DEFAULT '' NOT NULL,
+    chain_id VARCHAR(36) DEFAULT '' NOT NULL,
+    menu_id VARCHAR(36) DEFAULT '' NOT NULL,
     name VARCHAR(128) NOT NULL,
     email VARCHAR(128) DEFAULT '' NOT NULL,
     phone VARCHAR(32) DEFAULT '' NOT NULL,
@@ -80,7 +80,7 @@ CREATE TABLE restaurant
 -- bad  是不喜歡數量
 CREATE TABLE chain
 (
-    chain_id VARCHAR(128) NOT NULL,
+    chain_id VARCHAR(36) NOT NULL,
     name VARCHAR(128) NOT NULL UNIQUE,
     good INT DEFAULT 0 NOT NULL,
     bad INT DEFAULT 0 NOT NULL,
@@ -98,7 +98,7 @@ CREATE TABLE tag_name
 -- 連鎖店標籤
 CREATE TABLE chain_tag
 (
-    chain_id VARCHAR(128) NOT NULL,
+    chain_id VARCHAR(36) NOT NULL,
     tname VARCHAR(128) NOT NULL,
     pic_url VARCHAR(128) DEFAULT '' NOT NULL,
     PRIMARY Key(chain_id, tname)
@@ -106,7 +106,7 @@ CREATE TABLE chain_tag
 -- 店面標籤
 CREATE TABLE restaurant_tag
 (
-    restaurant_id VARCHAR(128) NOT NULL,
+    restaurant_id VARCHAR(36) NOT NULL,
     tname VARCHAR(128) NOT NULL,
     pic_url VARCHAR(128) DEFAULT '' NOT NULL,
     PRIMARY Key(restaurant_id, tname)
@@ -116,7 +116,7 @@ CREATE TABLE restaurant_tag
 -- 免費的東西 price 會是0
 CREATE TABLE menu
 (
-    menu_id VARCHAR(128) NOT NULL,
+    menu_id VARCHAR(36) NOT NULL,
     pic_urls VARCHAR(1024) DEFAULT '' NOT NULL,
     input_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     PRIMARY Key(menu_id)
@@ -124,24 +124,24 @@ CREATE TABLE menu
 
 CREATE TABLE menu_tag
 (
-    menu_id VARCHAR(128) NOT NULL,
+    menu_id VARCHAR(36) NOT NULL,
     tname VARCHAR(128) NOT NULL,
     PRIMARY Key(menu_id, tname)
 );
 
 CREATE TABLE food_tag
 (
-    food_id VARCHAR(128) NOT NULL,
+    food_id VARCHAR(36) NOT NULL,
     tname VARCHAR(128) NOT NULL,
     PRIMARY Key(food_id, tname)
 );
 
 CREATE TABLE food
 (
-    food_id VARCHAR(128) NOT NULL,
-    restaurant_id VARCHAR(128) DEFAULT '' NOT NULL,
+    food_id VARCHAR(36) NOT NULL,
+    menu_id VARCHAR(36) NOT NULL,
     name VARCHAR(128) NOT NULL,
-    price INT NOT NULL,
+    price FLOAT NOT NULL,
     pic_urls VARCHAR(1024) DEFAULT '' NOT NULL,
     input_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
     PRIMARY Key(food_id)
@@ -149,7 +149,7 @@ CREATE TABLE food
 
 CREATE TABLE food_log
 (
-    food_id VARCHAR(128) NOT NULL,
+    food_id VARCHAR(36) NOT NULL,
     member_email VARCHAR(128) NOT NULL,
     discrption VARCHAR(1024) NOT NULL,
     modify_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
@@ -158,7 +158,7 @@ CREATE TABLE food_log
 
 CREATE TABLE restaurant_log
 (
-    restaurant_id VARCHAR(128) NOT NULL,
+    restaurant_id VARCHAR(36) NOT NULL,
     member_email VARCHAR(128) NOT NULL,
     discrption VARCHAR(1024) NOT NULL,
     modify_date DATETIME DEFAULT CURRENT_TIMESTAMP NOT NULL,
