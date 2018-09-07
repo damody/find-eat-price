@@ -11,9 +11,11 @@ extern crate serde_json;
 extern crate serde_derive;
 #[macro_use]
 extern crate diesel;
+#[macro_use]
+extern crate log;
+extern crate env_logger;
 extern crate actix;
 extern crate actix_web;
-extern crate env_logger;
 extern crate futures;
 extern crate r2d2;
 extern crate uuid;
@@ -53,7 +55,7 @@ fn p404(_req: &HttpRequest<AppState>) -> actix_web::Result<actix_web::fs::NamedF
 }
 
 fn main() -> Result<(), Box<Error>> {
-    ::std::env::set_var("RUST_LOG", "actix_web=info");
+    ::std::env::set_var("RUST_LOG", "info");
     env_logger::init();
     use std::env;
     let sys = actix::System::new("diesel-example");
@@ -84,7 +86,7 @@ fn main() -> Result<(), Box<Error>> {
             .resource("/restaurant/search", |r| {
                 r.post().with(restaurant_search);
             })
-            .resource("/foods", |r| {
+            .resource("/food", |r| {
                 r.post().with(food_post);
                 r.put().with(food_put);
                 r.delete().with(food_delete);

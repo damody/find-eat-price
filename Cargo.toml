@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["damody <t1238142000@gmail.com>"]
 
 [dependencies]
+log = "*"
 env_logger = "*"
 bytes = "0.4"
 actix = "0.7"

@@ -47,7 +47,7 @@ pub struct NewMember {
 #[derive(Serialize, Queryable)]
 pub struct Restaurant {
     pub restaurant_id: String,
-    pub author_id: String,
+    pub author_email: String,
     pub chain_id: String,
     pub menu_id: String,
     pub name: String,

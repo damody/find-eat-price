@@ -37,7 +37,7 @@ impl Handler<member::MemberParams> for DbExecutor {
 
     fn handle(&mut self, msg: member::MemberParams, _: &mut Self::Context) -> Self::Result {
         use self::schema::member::dsl::*;
-        println!("{:?}", msg);
+        info!("{:?}", msg);
         let new_user = models::NewMember {
             member_email: msg.member_email,
             name: msg.name,
@@ -66,7 +66,7 @@ impl Handler<member::MemberPutParams> for DbExecutor {
 
     fn handle(&mut self, msg: member::MemberPutParams, _: &mut Self::Context) -> Self::Result {
         use self::schema::member::dsl::*;
-        println!("{:?}", msg);
+        info!("{:?}", msg);
         let mid = msg.member_email.clone();
         let new_user = models::MemberUpdate {
             name: msg.name,
@@ -97,7 +97,7 @@ impl Handler<member::MemberDeleteParams> for DbExecutor {
 
     fn handle(&mut self, msg: member::MemberDeleteParams, _: &mut Self::Context) -> Self::Result {
         use self::schema::member::dsl::*;
-        println!("{:?}", msg);
+        info!("{:?}", msg);
         let mid = msg.member_email.clone();
         let conn: &MysqlConnection = &self.0.get().unwrap();
         let res = diesel::delete(member.find(mid)).execute(conn);
@@ -122,17 +122,17 @@ impl Handler<restaurant::RestaurantParams> for DbExecutor {
 
     fn handle(&mut self, msg: restaurant::RestaurantParams, _: &mut Self::Context) -> Self::Result {
         use self::schema::menu::dsl as menu_dsl;
-        println!("{:?}", msg);
+        info!("{:?}", msg);
         let conn: &MysqlConnection = &self.0.get().unwrap();
         use diesel::result::Error;
         let uuid = format!("{}", uuid::Uuid::new_v4());
         let new_menu = models::NewMenu {
-            menu_id: uuid,
+            menu_id: uuid.clone(),
             pic_urls: None,
         };
         let tmenu:Result<models::Menu, Error> = conn.transaction::<_, Error, _>(|| {
             diesel::insert_into(menu_dsl::menu).values(&new_menu).execute(conn)?;
-            menu_dsl::menu.order(menu_dsl::menu_id.desc()).first(conn)
+            menu_dsl::menu.find(uuid.clone()).first(conn)
         });
         
         match tmenu {
@@ -143,7 +143,7 @@ impl Handler<restaurant::RestaurantParams> for DbExecutor {
                 let (x,y) = mercator::wgs84_to_twd97(lng as f64, lat as f64);
                 let uuid = format!("{}", uuid::Uuid::new_v4());
                 let new_user = models::NewRestaurant {
-                    restaurant_id: uuid,
+                    restaurant_id: uuid.clone(),
                     author_email: msg.author_email,
                     name: msg.name,
                     phone: msg.phone,
@@ -160,7 +160,7 @@ impl Handler<restaurant::RestaurantParams> for DbExecutor {
                 };
                 let data:Result<models::Restaurant, Error> = conn.transaction::<_, Error, _>(|| {
                     diesel::insert_into(restaurant_dsl::restaurant).values(&new_user).execute(conn)?;
-                    restaurant_dsl::restaurant.order(restaurant_dsl::restaurant_id.desc()).first(conn)
+                    restaurant_dsl::restaurant.find(uuid.clone()).first(conn)
                 });
                 match data {
                     Ok(r) => {
@@ -183,7 +183,7 @@ impl Handler<restaurant::RestaurantPutParams> for DbExecutor {
 
     fn handle(&mut self, msg: restaurant::RestaurantPutParams, _: &mut Self::Context) -> Self::Result {
         use self::schema::restaurant::dsl as restaurant_dsl;
-        println!("{:?}", msg);
+        info!("{:?}", msg);
         let mid = msg.restaurant_id.clone();
         let new_user = if msg.lng.is_some() && msg.lat.is_some() {
             let lng:f32 = msg.lng.unwrap();
@@ -244,7 +244,7 @@ impl Handler<restaurant::RestaurantDeleteParams> for DbExecutor {
 
     fn handle(&mut self, msg: restaurant::RestaurantDeleteParams, _: &mut Self::Context) -> Self::Result {
         use self::schema::restaurant::dsl::*;
-        println!("{:?}", msg);
+        info!("{:?}", msg);
         let mid = msg.restaurant_id.clone();
         let conn: &MysqlConnection = &self.0.get().unwrap();
         let res = diesel::delete(restaurant.find(mid)).execute(conn);
@@ -275,7 +275,7 @@ impl Handler<restaurant::RestaurantSearchParams> for DbExecutor {
 
     fn handle(&mut self, msg: restaurant::RestaurantSearchParams, _: &mut Self::Context) -> Self::Result {
         use self::schema::restaurant::dsl as restaurant_dsl;
-        println!("{:?}", msg);
+        info!("{:?}", msg);
         
         let conn: &MysqlConnection = &self.0.get().unwrap();
         let mut data = restaurant_dsl::restaurant.into_boxed();
@@ -339,10 +339,10 @@ impl Handler<food::FoodParams> for DbExecutor {
 
     fn handle(&mut self, msg: food::FoodParams, _: &mut Self::Context) -> Self::Result {
         use self::schema::food::dsl as food_dsl;
-        println!("{:?}", msg);
+        info!("{:?}", msg);
         let uuid = format!("{}", uuid::Uuid::new_v4());
         let new_food = models::NewFood {
-            food_id: uuid,
+            food_id: uuid.clone(),
             menu_id: msg.menu_id,
             name: msg.name,
             price: msg.price,
@@ -352,7 +352,7 @@ impl Handler<food::FoodParams> for DbExecutor {
         use diesel::result::Error;
         let data = conn.transaction::<_, Error, _>(|| {
             diesel::insert_into(food_dsl::food).values(&new_food).execute(conn)?;
-            food_dsl::food.order(food_dsl::food_id.desc()).first(conn)
+            food_dsl::food.find(uuid.clone()).first(conn)
         });
         match data {
             Ok(x) => Ok(x),
@@ -369,7 +369,7 @@ impl Handler<food::FoodPutParams> for DbExecutor {
 
     fn handle(&mut self, msg: food::FoodPutParams, _: &mut Self::Context) -> Self::Result {
         use self::schema::food::dsl as food_dsl;
-        println!("{:?}", msg);
+        info!("{:?}", msg);
         let mid = msg.food_id;
         let new_food = models::FoodUpdate {
             name: msg.name,
@@ -397,8 +397,7 @@ impl Handler<food::FoodDeleteParams> for DbExecutor {
 
     fn handle(&mut self, msg: food::FoodDeleteParams, _: &mut Self::Context) -> Self::Result {
         use self::schema::food::dsl as food_dsl;
-        
-        println!("{:?}", msg);
+        info!("{:?}", msg);
         let mid = msg.food_id;
         let conn: &MysqlConnection = &self.0.get().unwrap();
         let res = diesel::delete(food_dsl::food.find(mid)).execute(conn);
