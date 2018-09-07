@@ -21,37 +21,6 @@ pub struct RestaurantParams {
     pub pic_urls: Option<Vec<String>>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct RestaurantPutParams {
-    pub restaurant_id: String,
-    pub chain_id: Option<String>,
-    pub menu_id: Option<String>,
-    pub name: Option<String>,
-    pub enable: Option<i8>,
-    pub email: Option<String>,
-    pub phone: Option<String>,
-    pub open_time: Option<String>,
-    pub close_time: Option<String>,
-    pub pic_urls: Option<Vec<String>>,
-    pub lng: Option<f32>,
-    pub lat: Option<f32>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct RestaurantDeleteParams {
-    pub restaurant_id: String,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct RestaurantSearchParams {
-    pub name: Option<String>,
-    pub lat: Option<f32>,
-    pub lng: Option<f32>,
-    pub range: Option<f32>,
-    pub like: Option<i32>,
-    pub dislike: Option<i32>,
-}
-
 pub fn restaurant_post((item, req): (Json<RestaurantParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
     let o = item.clone();
     req.state().db
@@ -77,6 +46,22 @@ pub fn restaurant_post((item, req): (Json<RestaurantParams>, HttpRequest<AppStat
             },
         })
         .responder()
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct RestaurantPutParams {
+    pub restaurant_id: String,
+    pub chain_id: Option<String>,
+    pub menu_id: Option<String>,
+    pub name: Option<String>,
+    pub enable: Option<i8>,
+    pub email: Option<String>,
+    pub phone: Option<String>,
+    pub open_time: Option<String>,
+    pub close_time: Option<String>,
+    pub pic_urls: Option<Vec<String>>,
+    pub lng: Option<f32>,
+    pub lat: Option<f32>,
 }
 
 pub fn restaurant_put((item, req): (Json<RestaurantPutParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
@@ -108,6 +93,11 @@ pub fn restaurant_put((item, req): (Json<RestaurantPutParams>, HttpRequest<AppSt
         .responder()
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct RestaurantDeleteParams {
+    pub restaurant_id: String,
+}
+
 pub fn restaurant_delete((item, req): (Json<RestaurantDeleteParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
     let o = item.clone();
     req.state().db
@@ -128,6 +118,16 @@ pub fn restaurant_delete((item, req): (Json<RestaurantDeleteParams>, HttpRequest
             },
         })
         .responder()
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct RestaurantSearchParams {
+    pub name: Option<String>,
+    pub lat: Option<f32>,
+    pub lng: Option<f32>,
+    pub range: Option<f32>,
+    pub like: Option<i32>,
+    pub dislike: Option<i32>,
 }
 
 pub fn restaurant_search((item, req): (Json<RestaurantSearchParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {

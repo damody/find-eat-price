@@ -17,23 +17,6 @@ pub struct MemberParams {
     pub pic_url: Option<Vec<String>>,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MemberPutParams {
-    pub member_email: String,
-    pub name: Option<String>,
-    pub enable: Option<i8>,
-    pub gender: Option<i8>,
-    pub phone: Option<String>,
-    pub password: Option<String>,
-    pub member_level: Option<i8>,
-    pub pic_url: Option<Vec<String>>,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone)]
-pub struct MemberDeleteParams {
-    pub member_email: String,
-}
-
 pub fn member_post((item, req): (Json<MemberParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
     let o = item.clone();
     req.state().db
@@ -55,6 +38,18 @@ pub fn member_post((item, req): (Json<MemberParams>, HttpRequest<AppState>)) -> 
             },
         })
         .responder()
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MemberPutParams {
+    pub member_email: String,
+    pub name: Option<String>,
+    pub enable: Option<i8>,
+    pub gender: Option<i8>,
+    pub phone: Option<String>,
+    pub password: Option<String>,
+    pub member_level: Option<i8>,
+    pub pic_url: Option<Vec<String>>,
 }
 
 pub fn member_put((item, req): (Json<MemberPutParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
@@ -80,6 +75,11 @@ pub fn member_put((item, req): (Json<MemberPutParams>, HttpRequest<AppState>)) -
             },
         })
         .responder()
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct MemberDeleteParams {
+    pub member_email: String,
 }
 
 pub fn member_delete((item, req): (Json<MemberDeleteParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {

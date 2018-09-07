@@ -140,7 +140,7 @@ pub struct NewMenu {
 pub struct Food {
     pub food_id: String,
     pub menu_id: String,
-    pub name: String,
+    pub food_name: String,
     pub price: f32,
     pub pic_urls: String,
     pub input_date: NaiveDateTime,
@@ -149,7 +149,7 @@ pub struct Food {
 #[derive(Deserialize, AsChangeset)]
 #[table_name = "food"]
 pub struct FoodUpdate {
-    pub name: Option<String>,
+    pub food_name: Option<String>,
     pub price: Option<f32>,
     pub pic_urls: Option<String>,
 }
@@ -159,7 +159,17 @@ pub struct FoodUpdate {
 pub struct NewFood {
     pub food_id: String,
     pub menu_id: String,
-    pub name: String,
+    pub food_name: String,
     pub price: f32,
+    pub pic_urls: String,
+}
+
+#[derive(Serialize, Queryable)]
+pub struct FoodSearchRes {
+    pub restaurant_id: String,
+    pub restaurant_name: String,
+    pub distance: f32,
+    pub food_id: String,
+    pub food_name: String,
     pub pic_urls: String,
 }

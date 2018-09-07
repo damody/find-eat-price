@@ -29,7 +29,7 @@ table! {
     food (food_id) {
         food_id -> Varchar,
         menu_id -> Varchar,
-        name -> Varchar,
+        food_name -> Varchar,
         price -> Float,
         pic_urls -> Varchar,
         input_date -> Datetime,

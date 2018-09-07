@@ -91,6 +91,9 @@ fn main() -> Result<(), Box<Error>> {
                 r.put().with(food_put);
                 r.delete().with(food_delete);
             })
+            .resource("/food/search", |r| {
+                r.post().with(food_search);
+            })
             .resource("/wgs84_to_twd97", |r| {
                 r.post().f(geo_convert::wgs84_to_twd97);
             })

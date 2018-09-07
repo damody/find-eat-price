@@ -344,7 +344,7 @@ impl Handler<food::FoodParams> for DbExecutor {
         let new_food = models::NewFood {
             food_id: uuid.clone(),
             menu_id: msg.menu_id,
-            name: msg.name,
+            food_name: msg.food_name,
             price: msg.price,
             pic_urls: json!(msg.pic_urls.unwrap_or(vec![])).to_string(),
         };
@@ -372,7 +372,7 @@ impl Handler<food::FoodPutParams> for DbExecutor {
         info!("{:?}", msg);
         let mid = msg.food_id;
         let new_food = models::FoodUpdate {
-            name: msg.name,
+            food_name: msg.food_name,
             price: msg.price,
             pic_urls: Some(json!(msg.pic_urls.unwrap_or(vec![])).to_string()),
         };
@@ -409,6 +409,75 @@ impl Handler<food::FoodDeleteParams> for DbExecutor {
                     Err(error::ErrorInternalServerError("item not found.".to_string()))
                 }    
             },
+            Err(x) => Err(error::ErrorInternalServerError(x))
+        }
+    }
+}
+
+impl Message for food::FoodSearchParams {
+    type Result = Result<Vec<models::FoodSearchRes>, Error>;
+}
+impl Handler<food::FoodSearchParams> for DbExecutor {
+    type Result = Result<Vec<models::FoodSearchRes>, Error>;
+
+    fn handle(&mut self, msg: food::FoodSearchParams, _: &mut Self::Context) -> Self::Result {
+        use self::schema::restaurant::dsl as restaurant_dsl;
+        use self::schema::food::dsl as food_dsl;
+        use self::schema::*;
+        info!("{:?}", msg);
+        
+        let conn: &MysqlConnection = &self.0.get().unwrap();
+        let mut data = food_dsl::food
+                .inner_join(restaurant_dsl::restaurant.on(
+                    food_dsl::menu_id.eq(restaurant_dsl::menu_id)
+                )).into_boxed();
+        data = data.filter(restaurant_dsl::enable.eq(1));
+        if msg.food_name.is_some() {
+            data = data.filter(food_dsl::food_name.like(format!("%{}%", msg.food_name.unwrap())));
+        };
+        let mut x:f32 = 0.0;
+        let mut y:f32 = 0.0;
+        if msg.lng.is_some() && msg.lat.is_some() && msg.range.is_some() {
+            let lng = msg.lng.unwrap();
+            let lat = msg.lat.unwrap();
+            let range = msg.range.unwrap();
+            let (xx,yy) = mercator::wgs84_to_twd97(lng as f64, lat as f64);
+            x = xx as f32;
+            y = yy as f32;
+
+            data = data.filter(restaurant_dsl::twd97x.between(x-range*0.5f32, x+range*0.5f32));
+            data = data.filter(restaurant_dsl::twd97y.between(y-range*0.5f32, y+range*0.5f32));
+        };
+        if msg.like.is_some() {
+            data = data.filter(restaurant_dsl::good.ge(msg.like.unwrap()));
+        }
+        if msg.dislike.is_some() {
+            data = data.filter(restaurant_dsl::bad.le(msg.dislike.unwrap()));
+        }
+        /*
+        let debug = diesel::debug_query::<diesel::mysql::Mysql, _>(&data);
+        info!("debug_query {}", debug);
+        let mut data = food_dsl::food
+                .inner_join(restaurant_dsl::restaurant.on(
+                    food_dsl::menu_id.eq(restaurant_dsl::menu_id)
+                )).into_boxed();
+        */
+        let data = data.load::<(models::Food, models::Restaurant)>(conn);
+        
+        match data {
+            Ok(defd) => {
+                let res = defd.into_iter().map(move |(f,r):(models::Food, models::Restaurant)| {
+                    models::FoodSearchRes {
+                        restaurant_id: r.restaurant_id,
+                        restaurant_name: r.name,
+                        distance: length(r.twd97x, r.twd97y, x, y),
+                        food_id: f.food_id,
+                        food_name: f.food_name,
+                        pic_urls: f.pic_urls,
+                    }
+                }).rev().collect();
+                Ok(res)
+                },
             Err(x) => Err(error::ErrorInternalServerError(x))
         }
     }
