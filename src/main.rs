@@ -34,7 +34,7 @@ use actix_web::{
 //use bytes::BytesMut;
 //use futures::{Future, Stream};
 use diesel::prelude::*;
-use r2d2_diesel::ConnectionManager;
+use diesel::r2d2::ConnectionManager;
 
 mod db;
 mod models;
