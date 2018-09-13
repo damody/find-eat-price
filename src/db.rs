@@ -14,6 +14,7 @@ use models;
 use schema;
 use mercator;
 use uuid;
+use std::collections::HashSet;
 
 pub type DBPool = Pool<ConnectionManager<MysqlConnection>>;
 
@@ -423,7 +424,6 @@ impl Handler<food::FoodSearchParams> for DbExecutor {
     fn handle(&mut self, msg: food::FoodSearchParams, _: &mut Self::Context) -> Self::Result {
         use self::schema::restaurant::dsl as restaurant_dsl;
         use self::schema::food::dsl as food_dsl;
-        use self::schema::*;
         info!("{:?}", msg);
         
         let conn: &MysqlConnection = &self.0.get().unwrap();
@@ -454,14 +454,6 @@ impl Handler<food::FoodSearchParams> for DbExecutor {
         if msg.dislike.is_some() {
             data = data.filter(restaurant_dsl::bad.le(msg.dislike.unwrap()));
         }
-        /*
-        let debug = diesel::debug_query::<diesel::mysql::Mysql, _>(&data);
-        info!("debug_query {}", debug);
-        let mut data = food_dsl::food
-                .inner_join(restaurant_dsl::restaurant.on(
-                    food_dsl::menu_id.eq(restaurant_dsl::menu_id)
-                )).into_boxed();
-        */
         let data = data.load::<(models::Food, models::Restaurant)>(conn);
         
         match data {
@@ -476,6 +468,34 @@ impl Handler<food::FoodSearchParams> for DbExecutor {
                         pic_urls: f.pic_urls,
                     }
                 }).rev().collect();
+                Ok(res)
+                },
+            Err(x) => Err(error::ErrorInternalServerError(x))
+        }
+    }
+}
+
+impl Message for food::FoodKeywordParams {
+    type Result = Result<Vec<String>, Error>;
+}
+impl Handler<food::FoodKeywordParams> for DbExecutor {
+    type Result = Result<Vec<String>, Error>;
+    fn handle(&mut self, msg: food::FoodKeywordParams, _: &mut Self::Context) -> Self::Result {
+        use self::schema::food::dsl as food_dsl;
+        info!("{:?}", msg);
+        
+        let conn: &MysqlConnection = &self.0.get().unwrap();
+        let mut data = food_dsl::food.into_boxed();
+        data = data.filter(food_dsl::food_name.like(format!("{}%", msg.food_name)));
+        let data = data.load::<models::Food>(conn);
+        
+        match data {
+            Ok(defd) => {
+                let mut res:Vec<String> = defd.into_iter().map(move |f:models::Food| {
+                    f.food_name
+                }).rev().collect();
+                let set: HashSet<_> = res.drain(..).collect(); // dedup
+                res.extend(set.into_iter());
                 Ok(res)
                 },
             Err(x) => Err(error::ErrorInternalServerError(x))

@@ -94,6 +94,9 @@ fn main() -> Result<(), Box<Error>> {
             .resource("/food/search", |r| {
                 r.post().with(food_search);
             })
+            .resource("/food/keyword", |r| {
+                r.post().with(food_keyword);
+            })
             .resource("/food/menu", |r| {
                 r.post().with(food_menu);
             })

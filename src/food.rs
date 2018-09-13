@@ -127,6 +127,29 @@ pub fn food_search((item, req): (Json<FoodSearchParams>, HttpRequest<AppState>))
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct FoodKeywordParams {
+    pub food_name: String,
+}
+
+pub fn food_keyword((item, req): (Json<FoodKeywordParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
+    let o = item.clone();
+    req.state().db
+        .send(FoodKeywordParams {
+            food_name: o.food_name,
+        })
+        .from_err()
+        .and_then(|res| match res {
+            Ok(user) => Ok(HttpResponse::Ok().json(user)),
+            Err(x) => {
+                let mut hash = HashMap::new();
+                hash.insert("error", x.to_string());
+                Ok(HttpResponse::Ok().json(hash))
+            },
+        })
+        .responder()
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FoodMenuParams {
     pub menu_id: String,
 }
