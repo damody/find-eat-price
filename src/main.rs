@@ -28,7 +28,9 @@ extern crate mercator;
 use actix::prelude::*;
 use actix_web::{
     http, middleware, server, App, Error,
-    HttpRequest, HttpResponse,pred
+    HttpRequest, HttpResponse, pred,
+    http::{header, Method},
+    middleware::cors::Cors,
 };
 //use actix_web::{ error, AsyncResponder, HttpMessage, };
 //use bytes::BytesMut;
@@ -73,52 +75,63 @@ fn main() -> Result<(), Box<Error>> {
         App::with_state(AppState{db: addr.clone()})
             // enable logger
             .middleware(middleware::Logger::default())
-            .resource("/member", |r| {
-                r.post().with(member_post);
-                r.put().with(member_put);
-                r.delete().with(member_delete);
-            })
-            .resource("/restaurant", |r| {
-                r.post().with(restaurant_post);
-                r.put().with(restaurant_put);
-                r.delete().with(restaurant_delete);
-            })
-            .resource("/restaurant/search", |r| {
-                r.post().with(restaurant_search);
-            })
-            .resource("/food", |r| {
-                r.post().with(food_post);
-                r.put().with(food_put);
-                r.delete().with(food_delete);
-            })
-            .resource("/food/search", |r| {
-                r.post().with(food_search);
-            })
-            .resource("/food/keyword", |r| {
-                r.post().with(food_keyword);
-            })
-            .resource("/food/menu", |r| {
-                r.post().with(food_menu);
-            })
-            .resource("/wgs84_to_twd97", |r| {
-                r.post().f(geo_convert::wgs84_to_twd97);
-            })
-            .resource("/wgs84_to_2degree_zone", |r| {
-                r.post().f(geo_convert::wgs84_to_2degree_zone);
-            })
-            .resource("/wgs84_to_3degree_zone", |r| {
-                r.post().f(geo_convert::wgs84_to_3degree_zone);
-            })
-            .resource("/wgs84_to_6degree_zone", |r| {
-                r.post().f(geo_convert::wgs84_to_6degree_zone);
+            .configure(|app| {
+                Cors::for_app(app)
+                    .allowed_origin("http://localhost:4200")
+                    .allowed_methods(vec!["GET", "POST", "DELETE", "PUT"])
+                    .allowed_headers(vec![header::AUTHORIZATION, header::ACCEPT])
+                    .allowed_header(header::CONTENT_TYPE)
+                    .max_age(3600)
+                    .resource("/member", |r| {
+                        r.post().with(member_post);
+                        r.put().with(member_put);
+                        r.delete().with(member_delete);
+                    })
+                    .resource("/restaurant", |r| {
+                        r.post().with(restaurant_post);
+                        r.put().with(restaurant_put);
+                        r.delete().with(restaurant_delete);
+                    })
+                    .resource("/restaurant/search", |r| {
+                        r.post().with(restaurant_search);
+                    })
+                    .resource("/food", |r| {
+                        r.post().with(food_post);
+                        r.put().with(food_put);
+                        r.delete().with(food_delete);
+                    })
+                    .resource("/food/search", |r| {
+                        r.post().with(food_search);
+                    })
+                    .resource("/food/keyword", |r| {
+                        r.post().with(food_keyword);
+                    })
+                    .resource("/food/menu", |r| {
+                        r.post().with(food_menu);
+                    })
+                    .resource("/wgs84_to_twd97", |r| {
+                        r.post().f(geo_convert::wgs84_to_twd97);
+                    })
+                    .resource("/wgs84_to_2degree_zone", |r| {
+                        r.post().f(geo_convert::wgs84_to_2degree_zone);
+                    })
+                    .resource("/wgs84_to_3degree_zone", |r| {
+                        r.post().f(geo_convert::wgs84_to_3degree_zone);
+                    })
+                    .resource("/wgs84_to_6degree_zone", |r| {
+                        r.post().f(geo_convert::wgs84_to_6degree_zone);
+                    })
+                    
+                    .register()
             })
             .default_resource(|r| {
-                // 404 for GET request
-                r.method(http::Method::GET).f(p404);
-                // all requests that are not `GET`
-                r.route().filter(pred::Not(pred::Get())).f(
-                    |_req| HttpResponse::MethodNotAllowed());
-            })
+                        // 404 for GET request
+                        r.method(http::Method::GET).f(p404);
+                        // all requests that are not `GET`
+                        r.route().filter(pred::Not(pred::Get())).f(
+                            |_req| HttpResponse::MethodNotAllowed());
+                    })
+            
     }).bind("127.0.0.1:8080")
         .unwrap()
         .start();

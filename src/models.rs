@@ -20,7 +20,7 @@ pub struct Member {
     pub phone: String,
     pub password: String,
     pub member_level: i8,
-    pub join_date: NaiveDateTime,
+    pub join_date: chrono::NaiveDateTime,
 }
 
 #[derive(Deserialize, AsChangeset)]
@@ -63,7 +63,7 @@ pub struct Restaurant {
     pub twd97x: f32,
     pub twd97y: f32,
     pub pic_urls: String,
-    pub input_date: NaiveDateTime,
+    pub input_date: chrono::NaiveDateTime,
 }
 
 #[derive(Serialize, Queryable)]
@@ -126,7 +126,7 @@ pub struct RestaurantUpdate {
 pub struct Menu {
     pub menu_id: String,
     pub pic_urls: String,
-    pub input_date: NaiveDateTime,
+    pub input_date: chrono::NaiveDateTime,
 }
 
 #[derive(Deserialize, Insertable, Default)]
@@ -143,7 +143,7 @@ pub struct Food {
     pub food_name: String,
     pub price: f32,
     pub pic_urls: String,
-    pub input_date: NaiveDateTime,
+    pub input_date: chrono::NaiveDateTime,
 }
 
 #[derive(Deserialize, AsChangeset)]
