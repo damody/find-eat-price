@@ -129,6 +129,7 @@ pub fn food_search((item, req): (Json<FoodSearchParams>, HttpRequest<AppState>))
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FoodKeywordParams {
     pub food_name: String,
+    pub fuzzy: bool,
 }
 
 pub fn food_keyword((item, req): (Json<FoodKeywordParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
@@ -136,6 +137,7 @@ pub fn food_keyword((item, req): (Json<FoodKeywordParams>, HttpRequest<AppState>
     req.state().db
         .send(FoodKeywordParams {
             food_name: o.food_name,
+            fuzzy: o.fuzzy,
         })
         .from_err()
         .and_then(|res| match res {

@@ -153,3 +153,29 @@ pub fn restaurant_search((item, req): (Json<RestaurantSearchParams>, HttpRequest
         .responder()
 }
 
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct RestaurantKeywordParams {
+    pub name: String,
+    pub fuzzy: bool,
+}
+
+pub fn restaurant_keyword((item, req): (Json<RestaurantKeywordParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
+    let o = item.clone();
+    req.state().db
+        .send(RestaurantKeywordParams {
+            name: o.name,
+            fuzzy: o.fuzzy,
+        })
+        .from_err()
+        .and_then(|res| match res {
+            Ok(user) => Ok(HttpResponse::Ok().json(user)),
+            Err(x) => {
+                let mut hash = HashMap::new();
+                hash.insert("error", x.to_string());
+                Ok(HttpResponse::Ok().json(hash))
+            },
+        })
+        .responder()
+}
+

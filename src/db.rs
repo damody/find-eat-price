@@ -485,7 +485,13 @@ impl Handler<food::FoodKeywordParams> for DbExecutor {
         
         let conn: &MysqlConnection = &self.0.get().unwrap();
         let mut data = food_dsl::food.into_boxed();
-        data = data.filter(food_dsl::food_name.like(format!("{}%", msg.food_name)));
+        if msg.fuzzy {
+            for name in msg.food_name.split_whitespace() {
+                data = data.filter(food_dsl::food_name.like(format!("%{}%", name)));
+            }
+        } else {
+            data = data.filter(food_dsl::food_name.like(format!("{}%", msg.food_name)));
+        }
         let data = data.load::<models::Food>(conn);
         
         match data {
@@ -520,6 +526,40 @@ impl Handler<food::FoodMenuParams> for DbExecutor {
         match data {
             Ok(defd) => {
                 Ok(defd)
+                },
+            Err(x) => Err(error::ErrorInternalServerError(x))
+        }
+    }
+}
+
+impl Message for restaurant::RestaurantKeywordParams {
+    type Result = Result<Vec<String>, Error>;
+}
+impl Handler<restaurant::RestaurantKeywordParams> for DbExecutor {
+    type Result = Result<Vec<String>, Error>;
+    fn handle(&mut self, msg: restaurant::RestaurantKeywordParams, _: &mut Self::Context) -> Self::Result {
+        use self::schema::restaurant::dsl as restaurant_dsl;
+        info!("{:?}", msg);
+        
+        let conn: &MysqlConnection = &self.0.get().unwrap();
+        let mut data = restaurant_dsl::restaurant.into_boxed();
+        if msg.fuzzy {
+            for name in msg.name.split_whitespace() {
+                data = data.filter(restaurant_dsl::name.like(format!("%{}%", name)));
+            }
+        } else {
+            data = data.filter(restaurant_dsl::name.like(format!("{}%", msg.name)));
+        }
+        let data = data.load::<models::Restaurant>(conn);
+        
+        match data {
+            Ok(defd) => {
+                let mut res:Vec<String> = defd.into_iter().map(move |f:models::Restaurant| {
+                    f.name
+                }).rev().collect();
+                let set: HashSet<_> = res.drain(..).collect(); // dedup
+                res.extend(set.into_iter());
+                Ok(res)
                 },
             Err(x) => Err(error::ErrorInternalServerError(x))
         }
