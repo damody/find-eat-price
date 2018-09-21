@@ -120,6 +120,7 @@ table! {
         bad -> Integer,
         open_time -> Varchar,
         close_time -> Varchar,
+        delivery -> Varchar,
         lng -> Float,
         lat -> Float,
         twd97x -> Float,

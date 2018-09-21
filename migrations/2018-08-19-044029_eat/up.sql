@@ -66,6 +66,7 @@ CREATE TABLE restaurant
     bad INT DEFAULT 0 NOT NULL,
     open_time VARCHAR(128) DEFAULT '' NOT NULL,
     close_time VARCHAR(128) DEFAULT '' NOT NULL,
+    delivery VARCHAR(128) DEFAULT '' NOT NULL,
     lng FLOAT NOT NULL,
     lat FLOAT NOT NULL,
     twd97x FLOAT NOT NULL,
