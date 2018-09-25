@@ -29,7 +29,7 @@ use actix::prelude::*;
 use actix_web::{
     http, middleware, server, App, Error,
     HttpRequest, HttpResponse, pred,
-    http::{header, Method},
+    http::{header},
     middleware::cors::Cors,
 };
 //use actix_web::{ error, AsyncResponder, HttpMessage, };

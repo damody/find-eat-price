@@ -9,7 +9,7 @@ use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FoodParams {
-    pub menu_id: String,
+    pub menu_id: i32,
     pub food_name: String,
     pub price: f32,
     pub pic_urls: Option<Vec<String>>,
@@ -38,7 +38,7 @@ pub fn food_post((item, req): (Json<FoodParams>, HttpRequest<AppState>)) -> Futu
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FoodPutParams {
-    pub food_id: String,
+    pub food_id: i32,
     pub food_name: Option<String>,
     pub price: Option<f32>,
     pub pic_urls: Option<Vec<String>>,
@@ -68,7 +68,7 @@ pub fn food_put((item, req): (Json<FoodPutParams>, HttpRequest<AppState>)) -> Fu
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FoodDeleteParams {
-    pub food_id: String,
+    pub food_id: i32,
 }
 
 pub fn food_delete((item, req): (Json<FoodDeleteParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
@@ -153,7 +153,7 @@ pub fn food_keyword((item, req): (Json<FoodKeywordParams>, HttpRequest<AppState>
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FoodMenuParams {
-    pub menu_id: String,
+    pub menu_id: i32,
 }
 
 pub fn food_menu((item, req): (Json<FoodMenuParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {

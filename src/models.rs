@@ -1,6 +1,5 @@
 
 extern crate chrono;
-use chrono::NaiveDateTime;
 use super::schema::member;
 use super::schema::restaurant;
 use super::schema::menu;
@@ -46,10 +45,10 @@ pub struct NewMember {
 
 #[derive(Serialize, Queryable)]
 pub struct Restaurant {
-    pub restaurant_id: String,
+    pub restaurant_id: i32,
     pub author_email: String,
-    pub chain_id: String,
-    pub menu_id: String,
+    pub chain_id: i32,
+    pub menu_id: i32,
     pub name: String,
     pub email: String,
     pub phone: String,
@@ -69,10 +68,10 @@ pub struct Restaurant {
 
 #[derive(Serialize, Queryable)]
 pub struct RestaurantSearchRes {
-    pub restaurant_id: String,
-    pub chain_id: String,
+    pub restaurant_id: i32,
+    pub chain_id: i32,
     pub name: String,
-    pub menu_id: String,
+    pub menu_id: i32,
     pub good: i32,
     pub bad: i32,
     pub open_time: String,
@@ -88,10 +87,9 @@ pub struct RestaurantSearchRes {
 #[derive(Deserialize, Insertable, Default)]
 #[table_name = "restaurant"]
 pub struct NewRestaurant {
-    pub restaurant_id: String,
     pub author_email: String,
-    pub chain_id: Option<String>,
-    pub menu_id: Option<String>,
+    pub chain_id: Option<i32>,
+    pub menu_id: Option<i32>,
     pub name: String,
     pub phone: Option<String>,
     pub email: Option<String>,
@@ -108,9 +106,9 @@ pub struct NewRestaurant {
 #[derive(Deserialize, AsChangeset)]
 #[table_name = "restaurant"]
 pub struct RestaurantUpdate {
-    pub restaurant_id: String,
-    pub chain_id: Option<String>,
-    pub menu_id: Option<String>,
+    pub restaurant_id: i32,
+    pub chain_id: Option<i32>,
+    pub menu_id: Option<i32>,
     pub name: Option<String>,
     pub enable: Option<i8>,
     pub email: Option<String>,
@@ -127,7 +125,7 @@ pub struct RestaurantUpdate {
 
 #[derive(Serialize, Queryable)]
 pub struct Menu {
-    pub menu_id: String,
+    pub menu_id: i32,
     pub pic_urls: String,
     pub input_date: chrono::NaiveDateTime,
 }
@@ -135,14 +133,13 @@ pub struct Menu {
 #[derive(Deserialize, Insertable, Default)]
 #[table_name = "menu"]
 pub struct NewMenu {
-    pub menu_id: String,
     pub pic_urls: Option<String>,
 }
 
 #[derive(Serialize, Queryable)]
 pub struct Food {
-    pub food_id: String,
-    pub menu_id: String,
+    pub food_id: i32,
+    pub menu_id: i32,
     pub food_name: String,
     pub price: f32,
     pub pic_urls: String,
@@ -160,8 +157,7 @@ pub struct FoodUpdate {
 #[derive(Deserialize, Insertable, Default)]
 #[table_name = "food"]
 pub struct NewFood {
-    pub food_id: String,
-    pub menu_id: String,
+    pub menu_id: i32,
     pub food_name: String,
     pub price: f32,
     pub pic_urls: String,
@@ -169,10 +165,10 @@ pub struct NewFood {
 
 #[derive(Serialize, Queryable)]
 pub struct FoodSearchRes {
-    pub restaurant_id: String,
+    pub restaurant_id: i32,
     pub restaurant_name: String,
     pub distance: f32,
-    pub food_id: String,
+    pub food_id: i32,
     pub food_name: String,
     pub pic_urls: String,
 }

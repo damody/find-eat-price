@@ -1,14 +1,14 @@
 table! {
     blacklist (member_email, restaurant_id) {
         member_email -> Varchar,
-        restaurant_id -> Varchar,
+        restaurant_id -> Integer,
         comment -> Varchar,
     }
 }
 
 table! {
     chain (chain_id) {
-        chain_id -> Varchar,
+        chain_id -> Integer,
         name -> Varchar,
         good -> Integer,
         bad -> Integer,
@@ -18,17 +18,17 @@ table! {
 }
 
 table! {
-    chain_tag (chain_id, tname) {
-        chain_id -> Varchar,
-        tname -> Varchar,
+    chain_tag (chain_id, tag_id) {
+        chain_id -> Integer,
+        tag_id -> Integer,
         pic_url -> Varchar,
     }
 }
 
 table! {
     food (food_id) {
-        food_id -> Varchar,
-        menu_id -> Varchar,
+        food_id -> Integer,
+        menu_id -> Integer,
         food_name -> Varchar,
         price -> Float,
         pic_urls -> Varchar,
@@ -38,7 +38,7 @@ table! {
 
 table! {
     food_log (modify_date) {
-        food_id -> Varchar,
+        food_id -> Integer,
         member_email -> Varchar,
         discrption -> Varchar,
         modify_date -> Datetime,
@@ -46,16 +46,16 @@ table! {
 }
 
 table! {
-    food_tag (food_id, tname) {
-        food_id -> Varchar,
-        tname -> Varchar,
+    food_tag (food_id, tag_id) {
+        food_id -> Integer,
+        tag_id -> Integer,
     }
 }
 
 table! {
     like_restaurant (member_email, restaurant_id) {
         member_email -> Varchar,
-        restaurant_id -> Varchar,
+        restaurant_id -> Integer,
         good -> Tinyint,
         comment -> Varchar,
     }
@@ -93,25 +93,25 @@ table! {
 
 table! {
     menu (menu_id) {
-        menu_id -> Varchar,
+        menu_id -> Integer,
         pic_urls -> Varchar,
         input_date -> Datetime,
     }
 }
 
 table! {
-    menu_tag (menu_id, tname) {
-        menu_id -> Varchar,
-        tname -> Varchar,
+    menu_tag (menu_id, tag_id) {
+        menu_id -> Integer,
+        tag_id -> Integer,
     }
 }
 
 table! {
     restaurant (restaurant_id) {
-        restaurant_id -> Varchar,
+        restaurant_id -> Integer,
         author_email -> Varchar,
-        chain_id -> Varchar,
-        menu_id -> Varchar,
+        chain_id -> Integer,
+        menu_id -> Integer,
         name -> Varchar,
         email -> Varchar,
         phone -> Varchar,
@@ -132,7 +132,7 @@ table! {
 
 table! {
     restaurant_log (modify_date) {
-        restaurant_id -> Varchar,
+        restaurant_id -> Integer,
         member_email -> Varchar,
         discrption -> Varchar,
         modify_date -> Datetime,
@@ -140,15 +140,16 @@ table! {
 }
 
 table! {
-    restaurant_tag (restaurant_id, tname) {
-        restaurant_id -> Varchar,
-        tname -> Varchar,
+    restaurant_tag (restaurant_id, tag_id) {
+        restaurant_id -> Integer,
+        tag_id -> Integer,
         pic_url -> Varchar,
     }
 }
 
 table! {
-    tag_name (tname) {
+    tag_name (tag_id) {
+        tag_id -> Integer,
         tname -> Varchar,
         pic_url -> Varchar,
     }

@@ -12,9 +12,9 @@ use food;
 use models;
 use schema;
 use mercator;
-use uuid;
 use std::collections::HashSet;
 
+no_arg_sql_function!(last_insert_id, diesel::sql_types::Integer);
 pub type DBPool = Pool<ConnectionManager<MysqlConnection>>;
 
 /// This is db executor actor. We are going to run 3 of them in parallel.
@@ -125,14 +125,12 @@ impl Handler<restaurant::RestaurantParams> for DbExecutor {
         info!("{:?}", msg);
         let conn: &MysqlConnection = &self.0.get().unwrap();
         use diesel::result::Error;
-        let uuid = format!("{}", uuid::Uuid::new_v4());
         let new_menu = models::NewMenu {
-            menu_id: uuid.clone(),
             pic_urls: None,
         };
         let tmenu:Result<models::Menu, Error> = conn.transaction::<_, Error, _>(|| {
             diesel::insert_into(menu_dsl::menu).values(&new_menu).execute(conn)?;
-            menu_dsl::menu.find(uuid.clone()).first(conn)
+            menu_dsl::menu.find(last_insert_id).first(conn)
         });
         
         match tmenu {
@@ -141,9 +139,7 @@ impl Handler<restaurant::RestaurantParams> for DbExecutor {
                 let lng = msg.lng;
                 let lat = msg.lat;
                 let (x,y) = mercator::wgs84_to_twd97(lng as f64, lat as f64);
-                let uuid = format!("{}", uuid::Uuid::new_v4());
                 let new_user = models::NewRestaurant {
-                    restaurant_id: uuid.clone(),
                     author_email: msg.author_email,
                     name: msg.name,
                     phone: msg.phone,
@@ -161,7 +157,7 @@ impl Handler<restaurant::RestaurantParams> for DbExecutor {
                 };
                 let data:Result<models::Restaurant, Error> = conn.transaction::<_, Error, _>(|| {
                     diesel::insert_into(restaurant_dsl::restaurant).values(&new_user).execute(conn)?;
-                    restaurant_dsl::restaurant.find(uuid.clone()).first(conn)
+                    restaurant_dsl::restaurant.find(last_insert_id).first(conn)
                 });
                 match data {
                     Ok(r) => {
@@ -343,9 +339,7 @@ impl Handler<food::FoodParams> for DbExecutor {
     fn handle(&mut self, msg: food::FoodParams, _: &mut Self::Context) -> Self::Result {
         use self::schema::food::dsl as food_dsl;
         info!("{:?}", msg);
-        let uuid = format!("{}", uuid::Uuid::new_v4());
         let new_food = models::NewFood {
-            food_id: uuid.clone(),
             menu_id: msg.menu_id,
             food_name: msg.food_name,
             price: msg.price,
@@ -355,7 +349,7 @@ impl Handler<food::FoodParams> for DbExecutor {
         use diesel::result::Error;
         let data = conn.transaction::<_, Error, _>(|| {
             diesel::insert_into(food_dsl::food).values(&new_food).execute(conn)?;
-            food_dsl::food.find(uuid.clone()).first(conn)
+            food_dsl::food.find(last_insert_id).first(conn)
         });
         match data {
             Ok(x) => Ok(x),

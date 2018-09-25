@@ -10,7 +10,7 @@ use std::collections::HashMap;
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RestaurantParams {
     pub author_email: String,
-    pub chain_id: Option<String>,
+    pub chain_id: Option<i32>,
     pub name: String,
     pub phone: Option<String>,
     pub email: Option<String>,
@@ -52,9 +52,9 @@ pub fn restaurant_post((item, req): (Json<RestaurantParams>, HttpRequest<AppStat
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RestaurantPutParams {
-    pub restaurant_id: String,
-    pub chain_id: Option<String>,
-    pub menu_id: Option<String>,
+    pub restaurant_id: i32,
+    pub chain_id: Option<i32>,
+    pub menu_id: Option<i32>,
     pub name: Option<String>,
     pub enable: Option<i8>,
     pub email: Option<String>,
@@ -99,7 +99,7 @@ pub fn restaurant_put((item, req): (Json<RestaurantPutParams>, HttpRequest<AppSt
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RestaurantDeleteParams {
-    pub restaurant_id: String,
+    pub restaurant_id: i32,
 }
 
 pub fn restaurant_delete((item, req): (Json<RestaurantDeleteParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
