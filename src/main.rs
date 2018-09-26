@@ -78,7 +78,7 @@ fn main() -> Result<(), Box<Error>> {
             .configure(|app| {
                 Cors::for_app(app)
                     .allowed_origin("http://localhost:4200")
-                    .allowed_origin("https://www.find-eat-price.com")
+                    //.allowed_origin("https://www.find-eat-price.com")
                     .allowed_methods(vec!["GET", "POST", "DELETE", "PUT"])
                     .allowed_headers(vec![header::AUTHORIZATION, header::ACCEPT])
                     .allowed_header(header::CONTENT_TYPE)

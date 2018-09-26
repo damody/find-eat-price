@@ -95,12 +95,13 @@ pub fn food_delete((item, req): (Json<FoodDeleteParams>, HttpRequest<AppState>))
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct FoodSearchParams {
-    pub food_name: Option<String>,
+    pub food_name: String,
     pub lat: Option<f32>,
     pub lng: Option<f32>,
     pub range: Option<f32>,
     pub like: Option<i32>,
     pub dislike: Option<i32>,
+    pub fuzzy: Option<bool>,
 }
 
 pub fn food_search((item, req): (Json<FoodSearchParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
@@ -113,6 +114,7 @@ pub fn food_search((item, req): (Json<FoodSearchParams>, HttpRequest<AppState>))
             range: o.range,
             like: o.like,
             dislike: o.dislike,
+            fuzzy: o.fuzzy,
         })
         .from_err()
         .and_then(|res| match res {

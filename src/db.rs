@@ -279,9 +279,13 @@ impl Handler<restaurant::RestaurantSearchParams> for DbExecutor {
         let conn: &MysqlConnection = &self.0.get().unwrap();
         let mut data = restaurant_dsl::restaurant.into_boxed();
         data = data.filter(restaurant_dsl::enable.eq(1));
-        if msg.name.is_some() {
-            data = data.filter(restaurant_dsl::name.like(format!("%{}%", msg.name.unwrap())));
-        };
+        if msg.fuzzy.unwrap_or(false) {
+            for name in msg.name.split_whitespace() {
+                data = data.filter(restaurant_dsl::name.like(format!("%{}%", name)));
+            }
+        } else {
+            data = data.filter(restaurant_dsl::name.like(format!("{}%", msg.name)));
+        }
         let mut x:f32 = 0.0;
         let mut y:f32 = 0.0;
         if msg.lng.is_some() && msg.lat.is_some() && msg.range.is_some() {
@@ -428,9 +432,14 @@ impl Handler<food::FoodSearchParams> for DbExecutor {
                     food_dsl::menu_id.eq(restaurant_dsl::menu_id)
                 )).into_boxed();
         data = data.filter(restaurant_dsl::enable.eq(1));
-        if msg.food_name.is_some() {
-            data = data.filter(food_dsl::food_name.like(format!("%{}%", msg.food_name.unwrap())));
-        };
+        if msg.fuzzy.unwrap_or(false) {
+            for name in msg.food_name.split_whitespace() {
+                data = data.filter(food_dsl::food_name.like(format!("%{}%", name)));
+            }
+        } else {
+            data = data.filter(food_dsl::food_name.like(format!("{}%", msg.food_name)));
+        }
+        
         let mut x:f32 = 0.0;
         let mut y:f32 = 0.0;
         if msg.lng.is_some() && msg.lat.is_some() && msg.range.is_some() {

@@ -126,12 +126,13 @@ pub fn restaurant_delete((item, req): (Json<RestaurantDeleteParams>, HttpRequest
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RestaurantSearchParams {
-    pub name: Option<String>,
+    pub name: String,
     pub lat: Option<f32>,
     pub lng: Option<f32>,
     pub range: Option<f32>,
     pub like: Option<i32>,
     pub dislike: Option<i32>,
+    pub fuzzy: Option<bool>,
 }
 
 pub fn restaurant_search((item, req): (Json<RestaurantSearchParams>, HttpRequest<AppState>)) -> FutureResponse<HttpResponse> {
@@ -144,6 +145,7 @@ pub fn restaurant_search((item, req): (Json<RestaurantSearchParams>, HttpRequest
             range: o.range,
             like: o.like,
             dislike: o.dislike,
+            fuzzy: o.fuzzy,
         })
         .from_err()
         .and_then(|res| match res {
